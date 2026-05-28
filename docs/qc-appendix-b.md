@@ -16,6 +16,7 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 - `docker run --rm -v "${PWD}:/workspace" -w /workspace/apps/worker python:3.12-slim bash -lc "pip install -r requirements.txt && python ../../tests/fixtures/generate_epub_fixtures.py && pytest -q"`
 - `python -m py_compile scripts/measure_qc.py`
 - `docker compose config`
+- `python -m pytest apps/worker/tests -q` -> `18 passed in 5.12s`
 
 ### Passing remote CI checks
 
@@ -83,6 +84,7 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 - EPUB -> MOBI -> EPUB round-trip preserves title, contributors, and identifiers through the fake converter path.
 - Batch ZIP processing returns CSV plus repaired ZIP output.
 - Two-EPUB diff returns structure, metadata, and chapter content changes.
+- Job storage now enforces TTL cleanup; expired job directories are purged before new work and expired inputs become unreadable in `apps/worker/tests/test_job_store.py`.
 
 ## Remaining qualification work
 
@@ -118,4 +120,5 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 ### Documentation
 
 - Add final screenshot evidence to the README or docs set.
+- README now documents the `EPUBDOCTOR_RETENTION_TTL_SECONDS` override for self-hosted artifact retention.
 - Link the final release PR and qualification SHA once Section 5 is fully green.
