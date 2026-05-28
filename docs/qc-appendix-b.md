@@ -39,6 +39,7 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 - Measure p95 validate for a 5 MB EPUB.
 - Measure p95 EPUB -> MOBI conversion.
 - Measure p95 MOBI -> EPUB conversion.
+- Prepared helper: `python scripts/measure_qc.py --worker-url http://127.0.0.1:8000 --iterations 5`
 
 ### UX and hosted checks
 
