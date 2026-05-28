@@ -337,6 +337,12 @@ a {
   margin: 6px 0 0;
 }
 
+.batch-grid {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
 .convert-result pre {
   margin: 0;
   padding: 14px;

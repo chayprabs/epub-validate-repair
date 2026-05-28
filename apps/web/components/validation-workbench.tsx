@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 
 import type {
+  BatchResult,
   CoverPreset,
   ConversionResult,
   ConversionTarget,
@@ -44,6 +45,7 @@ const emptyMetadataForm = {
 export function ValidationWorkbench() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [compareFile, setCompareFile] = useState<File | null>(null);
+  const [batchFile, setBatchFile] = useState<File | null>(null);
   const [result, setResult] = useState<ValidationResult | null>(null);
   const [recipes, setRecipes] = useState<RepairRecipe[]>([]);
   const [selectedFixes, setSelectedFixes] = useState<RepairFixId[]>([]);
@@ -60,12 +62,14 @@ export function ValidationWorkbench() {
   const [stripCss, setStripCss] = useState(false);
   const [conversionResult, setConversionResult] = useState<ConversionResult | null>(null);
   const [diffResult, setDiffResult] = useState<DiffResult | null>(null);
+  const [batchResult, setBatchResult] = useState<BatchResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isRepairPending, startRepairTransition] = useTransition();
   const [isMetadataPending, startMetadataTransition] = useTransition();
   const [isConvertPending, startConvertTransition] = useTransition();
   const [isDiffPending, startDiffTransition] = useTransition();
+  const [isBatchPending, startBatchTransition] = useTransition();
 
   useEffect(() => {
     void (async () => {
@@ -315,6 +319,33 @@ export function ValidationWorkbench() {
     });
   }
 
+  function onBatch() {
+    if (!batchFile) {
+      setError("Choose a ZIP archive of EPUB files before running batch mode.");
+      return;
+    }
+
+    setError(null);
+    startBatchTransition(async () => {
+      const formData = new FormData();
+      formData.append("file", batchFile);
+
+      const response = await fetch(`${workerUrl}/v1/batch`, {
+        method: "POST",
+        body: formData
+      });
+
+      if (!response.ok) {
+        setBatchResult(null);
+        setError("Batch mode failed. The worker could not process the ZIP archive.");
+        return;
+      }
+
+      const payload = (await response.json()) as BatchResult;
+      setBatchResult(payload);
+    });
+  }
+
   return (
     <section className="panel workbench">
       <div className="workbench-header">
@@ -355,6 +386,21 @@ export function ValidationWorkbench() {
         </button>
       </div>
 
+      <div className="upload-row compare-row">
+        <input
+          accept=".zip,application/zip"
+          className="file-input"
+          onChange={(event) => {
+            setBatchFile(event.target.files?.[0] ?? null);
+            setBatchResult(null);
+          }}
+          type="file"
+        />
+        <button className="action secondary" disabled={isBatchPending} onClick={onBatch} type="button">
+          {isBatchPending ? "Batch processing..." : "Run Pro batch"}
+        </button>
+      </div>
+
       {recipes.length > 0 ? (
         <div className="recipe-strip">
           {recipes.map((recipe) => (
@@ -367,6 +413,7 @@ export function ValidationWorkbench() {
 
       {selectedFile ? <p className="status-line">Selected: {selectedFile.name}</p> : null}
       {compareFile ? <p className="status-line">Compare against: {compareFile.name}</p> : null}
+      {batchFile ? <p className="status-line">Batch archive: {batchFile.name}</p> : null}
       {error ? <p className="error-line">{error}</p> : null}
 
       {result ? (
@@ -612,6 +659,39 @@ export function ValidationWorkbench() {
                 </p>
               )}
             </section>
+
+            {batchResult ? (
+              <section className="convert-panel">
+                <div className="message-topline">
+                  <h3>Batch report</h3>
+                  <span className="message-meta">{batchResult.items.length} files</span>
+                </div>
+                <div className="artifact-links">
+                  <a href={batchResult.csvUrl} rel="noreferrer" target="_blank">
+                    Download CSV
+                  </a>
+                  <a href={batchResult.repairedZipUrl} rel="noreferrer" target="_blank">
+                    Download repaired ZIP
+                  </a>
+                </div>
+                <div className="batch-grid">
+                  {batchResult.items.map((item) => (
+                    <article className="diff-card" key={item.filename}>
+                      <div className="message-topline">
+                        <strong>{item.filename}</strong>
+                        <span>{item.status}</span>
+                      </div>
+                      <p className="message-meta">
+                        Errors: {item.originalErrors} {"->"} {item.repairedErrors}
+                      </p>
+                      {item.appliedFixes.length > 0 ? (
+                        <p className="message-suggestion">Fixes: {item.appliedFixes.join(", ")}</p>
+                      ) : null}
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ) : null}
 
             <div className="message-list">
               {result.messages.map((message) => (
