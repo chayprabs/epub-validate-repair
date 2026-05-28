@@ -136,6 +136,21 @@ export interface DiffResult {
   chapters: ChapterDiff[];
 }
 
+export interface BatchItemResult {
+  filename: string;
+  status: "passed" | "repaired" | "failed" | "unsupported";
+  originalErrors: number;
+  repairedErrors: number;
+  appliedFixes: RepairFixId[];
+}
+
+export interface BatchResult {
+  jobId: string;
+  csvUrl: string;
+  repairedZipUrl: string;
+  items: BatchItemResult[];
+}
+
 export type UnpackKind =
   | "xhtml"
   | "css"

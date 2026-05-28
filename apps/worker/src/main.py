@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from src.routes.artifacts import router as artifacts_router
+from src.routes.batch import router as batch_router
 from src.routes.convert import router as convert_router
 from src.routes.diff import router as diff_router
 from src.routes.health import router as health_router
@@ -12,6 +13,7 @@ from src.routes.validate import router as validate_router
 
 app = FastAPI(title="EpubDoctor Worker", version="0.1.0")
 app.include_router(artifacts_router)
+app.include_router(batch_router)
 app.include_router(convert_router)
 app.include_router(diff_router)
 app.include_router(health_router)

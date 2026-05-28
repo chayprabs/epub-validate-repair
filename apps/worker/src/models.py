@@ -148,6 +148,21 @@ class DiffResult(BaseModel):
     chapters: list[ChapterDiff]
 
 
+class BatchItemResult(BaseModel):
+    filename: str
+    status: Literal["passed", "repaired", "failed", "unsupported"]
+    originalErrors: int
+    repairedErrors: int
+    appliedFixes: list[RepairFixId] = Field(default_factory=list)
+
+
+class BatchResult(BaseModel):
+    jobId: str
+    csvUrl: str
+    repairedZipUrl: str
+    items: list[BatchItemResult]
+
+
 class UnpackEntry(BaseModel):
     path: str
     kind: Literal["xhtml", "css", "image", "xml", "opf", "ncx", "font", "text", "binary"]
