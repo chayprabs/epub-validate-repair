@@ -42,5 +42,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker compose config
-      - run: docker build -f apps/worker/Dockerfile .
-      - run: docker build -f apps/web/Dockerfile .
+      - run: docker build -f apps/worker/Dockerfile -t epubdoctor-worker:ci .
+      - run: docker build -f apps/web/Dockerfile -t epubdoctor-web:ci .
+      - run: |
+          worker_size_bytes=$(docker image inspect epubdoctor-worker:ci --format '{{.Size}}')
+          echo "worker_size_bytes=${worker_size_bytes}"
+          if [ "$worker_size_bytes" -gt 1610612736 ]; then
+            echo "Worker image exceeds 1.5 GB budget"
+            exit 1
+          fi
