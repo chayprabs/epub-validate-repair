@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { WorkbenchShell } from "../components/workbench-shell";
+import { seoPages } from "../lib/seo-pages";
 
 const features = [
   "Fixture-backed validation API with downloadable HTML and JSON reports",
@@ -27,6 +29,21 @@ export default function HomePage() {
             <li key={feature}>{feature}</li>
           ))}
         </ul>
+      </section>
+      <section className="panel seo-panel">
+        <h2>Guided entry points</h2>
+        <p className="lede">
+          These focused landing pages map the main publishing jobs back into
+          the same workbench.
+        </p>
+        <div className="link-grid">
+          {seoPages.map((page) => (
+            <Link className="link-card" href={`/${page.slug}`} key={page.slug}>
+              <strong>{page.title}</strong>
+              <span>{page.description}</span>
+            </Link>
+          ))}
+        </div>
       </section>
       <WorkbenchShell />
     </main>
