@@ -19,7 +19,7 @@ RUN apt-get update \
 RUN mkdir -p /opt/epubcheck \
     && curl -fsSL -o /tmp/epubcheck.zip "https://github.com/w3c/epubcheck/releases/download/v${EPUBCHECK_VERSION}/epubcheck-${EPUBCHECK_VERSION}.zip" \
     && unzip -q /tmp/epubcheck.zip -d /opt/epubcheck-dist \
-    && cp /opt/epubcheck-dist/epubcheck-${EPUBCHECK_VERSION}/epubcheck.jar /opt/epubcheck/epubcheck.jar \
+    && cp -R /opt/epubcheck-dist/epubcheck-${EPUBCHECK_VERSION}/. /opt/epubcheck/ \
     && rm -rf /tmp/epubcheck.zip /opt/epubcheck-dist
 
 COPY apps/worker/requirements.txt ./requirements.txt
