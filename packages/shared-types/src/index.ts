@@ -113,6 +113,29 @@ export interface ConversionResult {
   log: string;
 }
 
+export interface StructureChange {
+  path: string;
+  change: "added" | "removed" | "changed";
+}
+
+export interface MetadataChange {
+  field: string;
+  before?: string | null;
+  after?: string | null;
+}
+
+export interface ChapterDiff {
+  path: string;
+  before?: string | null;
+  after?: string | null;
+}
+
+export interface DiffResult {
+  structure: StructureChange[];
+  metadata: MetadataChange[];
+  chapters: ChapterDiff[];
+}
+
 export type UnpackKind =
   | "xhtml"
   | "css"

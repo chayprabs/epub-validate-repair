@@ -130,6 +130,77 @@ BOOKS = {
 """,
         },
     },
+    "volume-1.epub": {
+        "opf": """<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="bookid">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:title>Volume One</dc:title>
+    <dc:creator>Fixture Author</dc:creator>
+    <dc:language>en</dc:language>
+    <dc:identifier id="bookid">9781234567890</dc:identifier>
+    <dc:publisher>EpubDoctor Fixtures</dc:publisher>
+  </metadata>
+  <manifest>
+    <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" />
+    <item id="chapter-1" href="text/chapter1.xhtml" media-type="application/xhtml+xml" />
+    <item id="chapter-2" href="text/chapter2.xhtml" media-type="application/xhtml+xml" />
+    <item id="cover-image" href="images/cover.jpg" media-type="image/jpeg" />
+  </manifest>
+  <spine toc="nav">
+    <itemref idref="chapter-1" />
+    <itemref idref="chapter-2" />
+  </spine>
+</package>
+""",
+        "files": {
+            "EPUB/nav.xhtml": """<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title>Navigation</title></head><body><nav epub:type="toc" xmlns:epub="http://www.idpf.org/2007/ops"><ol><li><a href="text/chapter1.xhtml">Chapter 1</a></li><li><a href="text/chapter2.xhtml">Chapter 2</a></li></ol></nav></body></html>
+""",
+            "EPUB/text/chapter1.xhtml": """<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title>Chapter 1</title></head><body><h1>Arrival</h1><p>The first volume opens at dawn.</p></body></html>
+""",
+            "EPUB/text/chapter2.xhtml": """<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title>Chapter 2</title></head><body><h1>Crossing</h1><p>The caravan reaches the old bridge.</p></body></html>
+""",
+            "EPUB/images/cover.jpg": b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00\xff\xd9",
+        },
+    },
+    "volume-2.epub": {
+        "opf": """<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="bookid">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:title>Volume Two</dc:title>
+    <dc:creator>Fixture Author</dc:creator>
+    <dc:language>en</dc:language>
+    <dc:identifier id="bookid">9781234567890</dc:identifier>
+    <dc:publisher>EpubDoctor Fixtures</dc:publisher>
+    <dc:rights>CC-BY-NC</dc:rights>
+  </metadata>
+  <manifest>
+    <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" />
+    <item id="chapter-1" href="text/chapter1.xhtml" media-type="application/xhtml+xml" />
+    <item id="appendix" href="text/appendix.xhtml" media-type="application/xhtml+xml" />
+    <item id="cover-image" href="images/cover.jpg" media-type="image/jpeg" />
+  </manifest>
+  <spine toc="nav">
+    <itemref idref="chapter-1" />
+    <itemref idref="appendix" />
+  </spine>
+</package>
+""",
+        "files": {
+            "EPUB/nav.xhtml": """<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title>Navigation</title></head><body><nav epub:type="toc" xmlns:epub="http://www.idpf.org/2007/ops"><ol><li><a href="text/chapter1.xhtml">Chapter 1</a></li><li><a href="text/appendix.xhtml">Appendix</a></li></ol></nav></body></html>
+""",
+            "EPUB/text/chapter1.xhtml": """<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title>Chapter 1</title></head><body><h1>Return</h1><p>The second volume opens at dusk.</p></body></html>
+""",
+            "EPUB/text/appendix.xhtml": """<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title>Appendix</title></head><body><h1>Appendix</h1><p>Field notes and maps.</p></body></html>
+""",
+            "EPUB/images/cover.jpg": b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00\xff\xd9",
+        },
+    },
 }
 
 

@@ -125,6 +125,29 @@ class ConversionResult(BaseModel):
     log: str
 
 
+class StructureChange(BaseModel):
+    path: str
+    change: Literal["added", "removed", "changed"]
+
+
+class MetadataChange(BaseModel):
+    field: str
+    before: str | None = None
+    after: str | None = None
+
+
+class ChapterDiff(BaseModel):
+    path: str
+    before: str | None = None
+    after: str | None = None
+
+
+class DiffResult(BaseModel):
+    structure: list[StructureChange]
+    metadata: list[MetadataChange]
+    chapters: list[ChapterDiff]
+
+
 class UnpackEntry(BaseModel):
     path: str
     kind: Literal["xhtml", "css", "image", "xml", "opf", "ncx", "font", "text", "binary"]
