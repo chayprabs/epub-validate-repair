@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ns0:package xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:ns0="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="bookid">
+  <ns0:metadata>
+    <dc:title>Broken Manifest</dc:title>
+    <dc:creator>Fixture Author</dc:creator>
+    <dc:language>en</dc:language>
+    <dc:identifier id="bookid">9781234567890</dc:identifier>
+  </ns0:metadata>
+  <ns0:manifest>
+    <ns0:item id="chapter-1" href="text/chapter1.xhtml" media-type="application/xhtml+xml" />
+  <ns0:item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav" /></ns0:manifest>
+  <ns0:spine>
+    <ns0:itemref idref="chapter-1" />
+    <ns0:itemref idref="missing-chapter" />
+  </ns0:spine>
+</ns0:package>

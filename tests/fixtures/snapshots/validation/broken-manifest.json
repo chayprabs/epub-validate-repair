@@ -1,0 +1,110 @@
+{
+  "artifacts": {
+    "htmlUrl": "<html-url>",
+    "jsonUrl": "<json-url>"
+  },
+  "counts": {
+    "error": 4,
+    "info": 1,
+    "usage": 0,
+    "warning": 0
+  },
+  "epubVersion": "3.0",
+  "jobId": "<job-id>",
+  "manifest": [
+    {
+      "href": "text/chapter1.xhtml",
+      "id": "chapter-1",
+      "mediaType": "application/xhtml+xml"
+    }
+  ],
+  "messages": [
+    {
+      "column": null,
+      "file": "EPUB/package.opf",
+      "fixableBy": "manifest-mismatch",
+      "id": "MANIFEST_MISMATCH",
+      "line": null,
+      "message": "text/chapter2.xhtml exists in the archive but is missing from the manifest.",
+      "severity": "error",
+      "suggestion": "Add text/chapter2.xhtml to the OPF manifest."
+    },
+    {
+      "column": null,
+      "file": "EPUB/package.opf",
+      "fixableBy": "spine-reference",
+      "id": "SPINE_REF_MISSING",
+      "line": null,
+      "message": "Spine itemref missing-chapter does not point to a manifest item.",
+      "severity": "error",
+      "suggestion": "Remove missing-chapter from the spine or add a matching manifest entry."
+    },
+    {
+      "column": null,
+      "file": "EPUB/package.opf",
+      "fixableBy": "toc-document",
+      "id": "TOC_MISSING",
+      "line": null,
+      "message": "The publication does not declare a navigation document or NCX table of contents.",
+      "severity": "error",
+      "suggestion": "Generate a nav.xhtml or toc.ncx file and reference it from the manifest."
+    },
+    {
+      "column": null,
+      "file": "EPUB/package.opf",
+      "fixableBy": "missing-cover",
+      "id": "COVER_MISSING",
+      "line": null,
+      "message": "The package does not declare a cover image.",
+      "severity": "error",
+      "suggestion": "Add a cover image file and mark it as the cover in the OPF manifest."
+    },
+    {
+      "column": null,
+      "file": "EPUB/package.opf",
+      "fixableBy": null,
+      "id": "EPUB_VERSION_DETECTED",
+      "line": null,
+      "message": "Detected EPUB 3.0.",
+      "severity": "info",
+      "suggestion": null
+    }
+  ],
+  "metadata": {
+    "contributors": [
+      {
+        "name": "Fixture Author",
+        "role": "aut"
+      }
+    ],
+    "custom": {},
+    "description": null,
+    "identifiers": [
+      {
+        "type": "isbn-13",
+        "value": "9781234567890"
+      }
+    ],
+    "language": "en",
+    "publishedAt": null,
+    "publisher": null,
+    "rights": null,
+    "series": null,
+    "seriesIndex": null,
+    "subjects": [],
+    "subtitle": null,
+    "title": "Broken Manifest"
+  },
+  "pass": false,
+  "spine": [
+    {
+      "href": "text/chapter1.xhtml",
+      "idref": "chapter-1"
+    },
+    {
+      "href": null,
+      "idref": "missing-chapter"
+    }
+  ],
+  "toc": []
+}
