@@ -22,6 +22,8 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 
 ### Passing remote CI checks
 
+- GitHub Actions run `26606874348` on commit `244606a` completed successfully for `web`, `worker`, and `containers` on `main` after upgrading the workflow actions to current Node 24-native majors.
+- This run completed without the earlier Node 20 deprecation annotations.
 - GitHub Actions run `26606506881` on commit `254dc07` completed successfully for `web`, `worker`, and `containers` on `main`.
 - `web` job result:
   - `pnpm lint`
@@ -137,6 +139,7 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 - Run `docker compose up --build -d` and capture health evidence on a healthy local Docker host.
 - `docker compose up --build -d` remains the only unproven part of the local runtime path; the live worker `/health` readiness output and warm-up log line are now qualified in remote CI.
 - A hosted deployment is still missing. The repo now includes `render.yaml` for a Render blueprint, but there is not yet a live public web URL or HTTPS certificate evidence for Section 5.14 / 5.16.
+- There are currently no deployment credentials or GitHub Actions variables configured in this repository for Render, Vercel, Netlify, or Cloudflare, so hosted rollout still requires external platform setup.
 - Worker image size budget is now qualified in remote CI: latest passing result `1180238441` bytes, which is below the `1.5 GB` gate.
 - Built worker container smoke is now qualified in remote CI for Java + EPUBCheck + Calibre execution against the acceptance fixture path.
 - Built worker service readiness is now qualified in remote CI for live `/health` startup with `javaReady`, `calibreReady`, and `epubcheckReady` all `true`.
