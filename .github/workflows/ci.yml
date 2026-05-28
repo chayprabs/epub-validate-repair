@@ -44,6 +44,7 @@ jobs:
       - run: docker compose config
       - run: docker build -f apps/worker/Dockerfile -t epubdoctor-worker:ci .
       - run: docker build -f apps/web/Dockerfile -t epubdoctor-web:ci .
+      - run: bash scripts/verify_worker_service.sh
       - run: docker run --rm -v "$PWD:/workspace" epubdoctor-worker:ci bash /workspace/scripts/verify_worker_container.sh
       - run: |
           worker_size_bytes=$(docker image inspect epubdoctor-worker:ci --format '{{.Size}}')
