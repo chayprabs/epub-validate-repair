@@ -5,6 +5,8 @@ import zipfile
 from pathlib import PurePosixPath
 from xml.etree import ElementTree
 
+from lxml import etree
+
 from src.models import (
     EpubMetadata,
     EpubcheckMessage,
@@ -115,6 +117,10 @@ def validate_epub(epub_path: str, job_id: str, base_artifact_url: str) -> Valida
                         fixableBy="manifest-mismatch",
                     )
                 )
+            if suffix in {".xhtml", ".html"}:
+                invalid_xhtml_message = _validate_xhtml(archive, archive_name, package_path)
+                if invalid_xhtml_message is not None:
+                    messages.append(invalid_xhtml_message)
 
         for spine_item in spine:
             if spine_item.href is None:
@@ -207,6 +213,30 @@ def _read_xml(
             )
         )
         return None
+
+
+def _validate_xhtml(
+    archive: zipfile.ZipFile,
+    archive_name: str,
+    package_path: str,
+) -> EpubcheckMessage | None:
+    parser = etree.XMLParser(resolve_entities=False)
+    try:
+        etree.fromstring(archive.read(archive_name), parser=parser)
+        return None
+    except etree.XMLSyntaxError as exc:
+        line = exc.position[0] if exc.position else None
+        column = exc.position[1] if exc.position else None
+        return EpubcheckMessage(
+            id="XHTML_INVALID",
+            severity="error",
+            message=f"{archive_name} is not well-formed XHTML.",
+            file=package_path,
+            line=line,
+            column=column,
+            suggestion=f"Recover and rewrite {archive_name} as valid XHTML.",
+            fixableBy="invalid-xhtml",
+        )
 
 
 def _extract_metadata(package_root: ElementTree.Element) -> EpubMetadata:

@@ -47,3 +47,20 @@ def test_kdp_ready_fixture_passes_validation() -> None:
     payload = response.json()
     assert payload["counts"]["error"] == 0
     assert payload["pass"] is True
+
+
+def test_invalid_xhtml_is_marked_fixable() -> None:
+    client = TestClient(app)
+    fixture_path = FIXTURE_DIR / "invalid-xhtml.epub"
+
+    with fixture_path.open("rb") as handle:
+        response = client.post(
+            "/v1/validate",
+            files={"file": (fixture_path.name, handle, "application/epub+zip")},
+        )
+
+    assert response.status_code == 200
+    payload = response.json()
+    xhtml_messages = [message for message in payload["messages"] if message["id"] == "XHTML_INVALID"]
+    assert xhtml_messages
+    assert xhtml_messages[0]["fixableBy"] == "invalid-xhtml"

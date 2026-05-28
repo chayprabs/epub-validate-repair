@@ -4,6 +4,15 @@ from pydantic import BaseModel, Field
 
 
 ValidationSeverity = Literal["error", "warning", "info", "usage"]
+RepairFixId = Literal[
+    "manifest-mismatch",
+    "spine-reference",
+    "toc-document",
+    "invalid-xhtml",
+    "mimetype-entry",
+    "missing-cover",
+    "container-xml",
+]
 
 
 class EpubcheckMessage(BaseModel):
@@ -53,6 +62,23 @@ class EpubMetadata(BaseModel):
 class ValidationArtifacts(BaseModel):
     htmlUrl: str
     jsonUrl: str
+
+
+class RepairRecipe(BaseModel):
+    id: RepairFixId
+    label: str
+    description: str
+
+
+class RepairRequest(BaseModel):
+    jobId: str
+    fixes: list[RepairFixId]
+
+
+class RepairResult(BaseModel):
+    jobId: str
+    appliedFixes: list[RepairFixId]
+    validation: "ValidationResult"
 
 
 class ValidationResult(BaseModel):

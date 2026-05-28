@@ -1,4 +1,12 @@
 export type ValidationSeverity = "error" | "warning" | "info" | "usage";
+export type RepairFixId =
+  | "manifest-mismatch"
+  | "spine-reference"
+  | "toc-document"
+  | "invalid-xhtml"
+  | "mimetype-entry"
+  | "missing-cover"
+  | "container-xml";
 
 export interface EpubcheckMessage {
   id: string;
@@ -49,6 +57,12 @@ export interface ValidationArtifacts {
   jsonUrl: string;
 }
 
+export interface RepairRecipe {
+  id: RepairFixId;
+  label: string;
+  description: string;
+}
+
 export interface ValidationResult {
   jobId: string;
   epubVersion: "2.0" | "3.0" | "3.1" | "3.2" | "3.3";
@@ -60,4 +74,10 @@ export interface ValidationResult {
   manifest: ManifestItem[];
   toc: TocItem[];
   artifacts: ValidationArtifacts;
+}
+
+export interface RepairResult {
+  jobId: string;
+  appliedFixes: RepairFixId[];
+  validation: ValidationResult;
 }
