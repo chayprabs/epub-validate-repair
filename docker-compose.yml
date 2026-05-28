@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_WORKER_URL: http://worker:8000
     environment:
       NEXT_PUBLIC_WORKER_URL: http://worker:8000
     ports:

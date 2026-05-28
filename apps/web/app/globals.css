@@ -45,8 +45,37 @@ a {
 
 .hero {
   display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.9fr);
   gap: 24px;
   margin-bottom: 24px;
+  align-items: start;
+}
+
+.hero-copy {
+  display: grid;
+  gap: 18px;
+}
+
+.hero-side,
+.hero-card {
+  display: grid;
+  gap: 12px;
+}
+
+.hero-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.hero-list,
+.step-list {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--muted);
+  display: grid;
+  gap: 10px;
 }
 
 .eyebrow {
@@ -70,6 +99,16 @@ a {
   font-size: 1.05rem;
 }
 
+.lede.compact {
+  margin-top: 8px;
+  max-width: 38rem;
+  font-size: 0.98rem;
+}
+
+.subtle-text {
+  color: #ffe7b6;
+}
+
 .badge {
   width: fit-content;
   padding: 10px 14px;
@@ -83,14 +122,19 @@ a {
   margin-top: 0;
 }
 
-.panel ul {
-  margin: 0;
-  padding-left: 20px;
-  color: var(--muted);
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
 }
 
 .seo-panel {
   margin-top: 24px;
+}
+
+.quickstart-panel {
+  margin-bottom: 24px;
 }
 
 .cta-row {
@@ -123,6 +167,13 @@ a {
 
 .workbench {
   margin-top: 24px;
+}
+
+.hero-actions,
+.tab-strip {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .workbench-header,
@@ -240,6 +291,13 @@ a {
   background: rgba(5, 10, 16, 0.45);
 }
 
+.count-stack {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+  color: var(--muted);
+}
+
 .message-list {
   flex: 1 1 420px;
   display: grid;
@@ -250,6 +308,21 @@ a {
   flex: 1 1 520px;
   display: grid;
   gap: 18px;
+}
+
+.tab-pill {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.tab-pill.active {
+  border-color: rgba(241, 178, 74, 0.3);
+  background: rgba(241, 178, 74, 0.12);
+  color: var(--text);
 }
 
 .repair-panel {
@@ -446,6 +519,16 @@ a {
   background: rgba(5, 10, 16, 0.45);
 }
 
+.inline-link {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #ffd996;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
 .structure-grid {
   display: grid;
   grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
@@ -550,8 +633,11 @@ a {
 
   .workbench-header,
   .upload-row,
-  .result-grid {
+  .result-grid,
+  .panel-header,
+  .hero {
     display: grid;
+    grid-template-columns: 1fr;
   }
 
   .structure-grid {

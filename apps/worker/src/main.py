@@ -1,6 +1,8 @@
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from src.core.runtime import prewarm_runtime
 from src.routes.artifacts import router as artifacts_router
@@ -20,7 +22,29 @@ async def lifespan(app: FastAPI):
     yield
 
 
+def _load_cors_origins() -> list[str]:
+    configured = os.getenv("EPUBDOCTOR_CORS_ORIGINS")
+    if configured:
+        return [origin.strip() for origin in configured.split(",") if origin.strip()]
+
+    return [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3100",
+        "http://127.0.0.1:3100",
+        "http://localhost:3101",
+        "http://127.0.0.1:3101",
+    ]
+
+
 app = FastAPI(title="EpubDoctor Worker", version="0.1.0", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_load_cors_origins(),
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(artifacts_router)
 app.include_router(batch_router)
 app.include_router(convert_router)

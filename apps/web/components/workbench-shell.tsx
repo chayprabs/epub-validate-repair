@@ -11,9 +11,9 @@ const ValidationWorkbench = dynamic(
         <div className="workbench-header">
           <div>
             <p className="eyebrow">Workbench</p>
-            <h2>Loading the repair and conversion surface...</h2>
+            <h2>Loading the validation and repair surface...</h2>
           </div>
-          <div className="badge subtle">Preparing local tools</div>
+          <div className="badge subtle">Preparing the worker connection</div>
         </div>
       </section>
     )

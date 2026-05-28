@@ -86,6 +86,15 @@ const emptyMetadataForm = {
   seriesIndex: "",
   custom: ""
 };
+type WorkbenchTab = "errors" | "repairs" | "metadata" | "structure" | "convert" | "diff";
+const workbenchTabs: Array<{ id: WorkbenchTab; label: string }> = [
+  { id: "errors", label: "Errors" },
+  { id: "repairs", label: "Repairs" },
+  { id: "metadata", label: "Metadata" },
+  { id: "structure", label: "Structure" },
+  { id: "convert", label: "Convert" },
+  { id: "diff", label: "Diff" }
+];
 
 export function ValidationWorkbench() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -111,6 +120,8 @@ export function ValidationWorkbench() {
   const [diffResult, setDiffResult] = useState<DiffResult | null>(null);
   const [batchResult, setBatchResult] = useState<BatchResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<WorkbenchTab>("errors");
+  const [workerRuntime, setWorkerRuntime] = useState<string>("Checking worker");
   const [isPending, startTransition] = useTransition();
   const [isRepairPending, startRepairTransition] = useTransition();
   const [isMetadataPending, startMetadataTransition] = useTransition();
@@ -126,6 +137,7 @@ export function ValidationWorkbench() {
       setPreview(null);
       setConversionResult(null);
       setDiffResult(null);
+      setActiveTab("errors");
       return;
     }
 
@@ -156,7 +168,48 @@ export function ValidationWorkbench() {
     });
     setCoverFile(null);
     setConversionResult(null);
+    setActiveTab("errors");
   }, [result]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const response = await fetch(`${workerUrl}/health`);
+        if (!response.ok) {
+          throw new Error("unreachable");
+        }
+        const payload = (await response.json()) as {
+          status?: string;
+          runtime?: { javaReady?: boolean; calibreReady?: boolean; epubcheckReady?: boolean; message?: string };
+        };
+        if (cancelled) {
+          return;
+        }
+        if (payload.status !== "ok") {
+          throw new Error("unexpected health payload");
+        }
+        const runtime = payload.runtime;
+        if (!runtime) {
+          throw new Error("unexpected health payload");
+        }
+        setWorkerRuntime(
+          runtime.javaReady && runtime.calibreReady && runtime.epubcheckReady
+            ? "Worker ready"
+            : runtime.message ?? "Worker reachable"
+        );
+      } catch {
+        if (!cancelled) {
+          setWorkerRuntime("Worker unavailable");
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!result) {
@@ -416,10 +469,14 @@ export function ValidationWorkbench() {
     <section className="panel workbench">
       <div className="workbench-header">
         <div>
-          <p className="eyebrow">Validation</p>
-          <h2>Upload an EPUB and inspect the first F1 slice.</h2>
+          <p className="eyebrow">Workbench</p>
+          <h2>Validate, repair, and export from one page.</h2>
+          <p className="lede compact">
+            Start with a file, sample fixture, or remote URL. Once a job is loaded,
+            move through Errors, Repairs, Metadata, Structure, Convert, and Diff.
+          </p>
         </div>
-        <div className="badge subtle">Worker: {workerUrl}</div>
+        <div className="badge subtle">{workerRuntime}</div>
       </div>
 
       <div className="upload-row">
@@ -529,7 +586,12 @@ export function ValidationWorkbench() {
               {result.pass ? "Pass" : "Needs repair"}
             </div>
             <p>EPUB {result.epubVersion}</p>
-            <pre>{JSON.stringify(result.counts, null, 2)}</pre>
+            <div className="count-stack">
+              <span>Errors {result.counts.error}</span>
+              <span>Warnings {result.counts.warning}</span>
+              <span>Info {result.counts.info}</span>
+              <span>Usage {result.counts.usage}</span>
+            </div>
             <div className="artifact-links">
               <a href={result.artifacts.htmlUrl} rel="noreferrer" target="_blank">
                 HTML report
@@ -541,51 +603,69 @@ export function ValidationWorkbench() {
           </div>
 
           <div className="result-main">
-            <section className="repair-panel">
-              <div className="message-topline">
-                <h3>Repair checklist</h3>
+            <div className="tab-strip" role="tablist" aria-label="Workbench sections">
+              {workbenchTabs.map((tab) => (
                 <button
-                  className="action secondary"
-                  disabled={isRepairPending || selectedFixes.length === 0 || result.pass}
-                  onClick={onRepair}
+                  aria-selected={activeTab === tab.id}
+                  className={`tab-pill ${activeTab === tab.id ? "active" : ""}`}
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  role="tab"
                   type="button"
                 >
-                  {isRepairPending ? "Repairing..." : "Apply selected"}
+                  {tab.label}
                 </button>
-              </div>
-              <div className="repair-list">
-                {recipes.map((recipe) => {
-                  const suggested = result.messages.some((message) => message.fixableBy === recipe.id);
-                  return (
-                    <label className={`repair-item ${suggested ? "suggested" : ""}`} key={recipe.id}>
-                      <input
-                        checked={selectedFixes.includes(recipe.id)}
-                        onChange={() => toggleFix(recipe.id)}
-                        type="checkbox"
-                      />
-                      <span>
-                        <strong>{recipe.label}</strong>
-                        <span className="message-suggestion">{recipe.description}</span>
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-            </section>
+              ))}
+            </div>
 
-            <section className="metadata-panel">
-              <div className="message-topline">
-                <h3>Metadata editor</h3>
-                <button
-                  className="action secondary"
-                  disabled={isMetadataPending}
-                  onClick={onSaveMetadata}
-                  type="button"
-                >
-                  {isMetadataPending ? "Saving..." : "Save metadata"}
-                </button>
-              </div>
-              <div className="metadata-grid">
+            {activeTab === "repairs" ? (
+              <section className="repair-panel">
+                <div className="message-topline">
+                  <h3>Repair checklist</h3>
+                  <button
+                    className="action secondary"
+                    disabled={isRepairPending || selectedFixes.length === 0 || result.pass}
+                    onClick={onRepair}
+                    type="button"
+                  >
+                    {isRepairPending ? "Repairing..." : "Apply selected"}
+                  </button>
+                </div>
+                <div className="repair-list">
+                  {recipes.map((recipe) => {
+                    const suggested = result.messages.some((message) => message.fixableBy === recipe.id);
+                    return (
+                      <label className={`repair-item ${suggested ? "suggested" : ""}`} key={recipe.id}>
+                        <input
+                          checked={selectedFixes.includes(recipe.id)}
+                          onChange={() => toggleFix(recipe.id)}
+                          type="checkbox"
+                        />
+                        <span>
+                          <strong>{recipe.label}</strong>
+                          <span className="message-suggestion">{recipe.description}</span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </section>
+            ) : null}
+
+            {activeTab === "metadata" ? (
+              <section className="metadata-panel">
+                <div className="message-topline">
+                  <h3>Metadata editor</h3>
+                  <button
+                    className="action secondary"
+                    disabled={isMetadataPending}
+                    onClick={onSaveMetadata}
+                    type="button"
+                  >
+                    {isMetadataPending ? "Saving..." : "Save metadata"}
+                  </button>
+                </div>
+                <div className="metadata-grid">
                 <label>
                   <span>Title</span>
                   <input
@@ -707,22 +787,24 @@ export function ValidationWorkbench() {
                   />
                   {coverFile ? <span className="message-meta">{coverFile.name}</span> : null}
                 </label>
-              </div>
-            </section>
+                </div>
+              </section>
+            ) : null}
 
-            <section className="convert-panel">
-              <div className="message-topline">
-                <h3>Convert</h3>
-                <button
-                  className="action secondary"
-                  disabled={isConvertPending}
-                  onClick={onConvert}
-                  type="button"
-                >
-                  {isConvertPending ? "Converting..." : "Run conversion"}
-                </button>
-              </div>
-              <div className="convert-grid">
+            {activeTab === "convert" ? (
+              <section className="convert-panel">
+                <div className="message-topline">
+                  <h3>Convert</h3>
+                  <button
+                    className="action secondary"
+                    disabled={isConvertPending}
+                    onClick={onConvert}
+                    type="button"
+                  >
+                    {isConvertPending ? "Converting..." : "Run conversion"}
+                  </button>
+                </div>
+                <div className="convert-grid">
                 <label>
                   <span>Source file</span>
                   <input
@@ -764,22 +846,23 @@ export function ValidationWorkbench() {
                   <input checked={stripCss} onChange={(event) => setStripCss(event.target.checked)} type="checkbox" />
                   <span>Strip CSS</span>
                 </label>
-              </div>
-              {conversionResult ? (
-                <div className="convert-result">
-                  <div className="artifact-links">
-                    <a href={conversionResult.artifactUrl} rel="noreferrer" target="_blank">
-                      Download {conversionResult.target.toUpperCase()}
-                    </a>
-                  </div>
-                  <pre>{conversionResult.log}</pre>
                 </div>
-              ) : (
-                <p className="message-suggestion">
-                  Convert the current job to EPUB, MOBI, AZW3, PDF, or HTML with Calibre-compatible options.
-                </p>
-              )}
-            </section>
+                {conversionResult ? (
+                  <div className="convert-result">
+                    <div className="artifact-links">
+                      <a href={conversionResult.artifactUrl} rel="noreferrer" target="_blank">
+                        Download {conversionResult.target.toUpperCase()}
+                      </a>
+                    </div>
+                    <pre>{conversionResult.log}</pre>
+                  </div>
+                ) : (
+                  <p className="message-suggestion">
+                    Convert the current job to EPUB, MOBI, AZW3, PDF, or HTML with Calibre-compatible options.
+                  </p>
+                )}
+              </section>
+            ) : null}
 
             {batchResult ? (
               <section className="convert-panel">
@@ -814,21 +897,42 @@ export function ValidationWorkbench() {
               </section>
             ) : null}
 
-            <div className="message-list">
-              {result.messages.map((message) => (
-                <article className={`message-card severity-${message.severity}`} key={`${message.id}-${message.file}`}>
-                  <div className="message-topline">
-                    <strong>{message.id}</strong>
-                    <span>{message.severity}</span>
-                  </div>
-                  <p>{message.message}</p>
-                  <p className="message-meta">{message.file}</p>
-                  {message.suggestion ? <p className="message-suggestion">{message.suggestion}</p> : null}
-                </article>
-              ))}
-            </div>
+            {activeTab === "errors" ? (
+              <div className="message-list">
+                {result.messages.map((message) => {
+                  const targetPath = getMessageTargetPath(message);
+                  return (
+                    <article className={`message-card severity-${message.severity}`} key={`${message.id}-${message.file}`}>
+                      <div className="message-topline">
+                        <strong>{message.id}</strong>
+                        <span>{message.severity}</span>
+                      </div>
+                      <p>{message.message}</p>
+                      <p className="message-meta">
+                        {message.file}
+                        {message.line ? `:${message.line}` : ""}
+                        {message.column ? `:${message.column}` : ""}
+                      </p>
+                      {message.suggestion ? <p className="message-suggestion">{message.suggestion}</p> : null}
+                      {targetPath ? (
+                        <button
+                          className="inline-link"
+                          onClick={() => {
+                            setSelectedPath(targetPath);
+                            setActiveTab("structure");
+                          }}
+                          type="button"
+                        >
+                          Open in viewer
+                        </button>
+                      ) : null}
+                    </article>
+                  );
+                })}
+              </div>
+            ) : null}
 
-            {entries.length > 0 ? (
+            {activeTab === "structure" && entries.length > 0 ? (
               <section className="structure-panel">
                 <div className="message-topline">
                   <h3>Structure preview</h3>
@@ -868,58 +972,69 @@ export function ValidationWorkbench() {
               </section>
             ) : null}
 
-            {diffResult ? (
-              <section className="diff-panel">
-                <div className="message-topline">
-                  <h3>Diff</h3>
-                  <span className="message-meta">
-                    {diffResult.structure.length + diffResult.metadata.length + diffResult.chapters.length} changes
-                  </span>
-                </div>
-                <div className="diff-grid">
-                  <div className="diff-column">
-                    <h4>Structure</h4>
-                    {diffResult.structure.length === 0 ? (
-                      <p className="message-suggestion">No structure changes.</p>
-                    ) : (
-                      diffResult.structure.map((change) => (
-                        <article className="diff-card" key={`${change.change}-${change.path}`}>
-                          <strong>{change.change}</strong>
-                          <p>{change.path}</p>
-                        </article>
-                      ))
-                    )}
+            {activeTab === "diff" ? (
+              diffResult ? (
+                <section className="diff-panel">
+                  <div className="message-topline">
+                    <h3>Diff</h3>
+                    <span className="message-meta">
+                      {diffResult.structure.length + diffResult.metadata.length + diffResult.chapters.length} changes
+                    </span>
                   </div>
-                  <div className="diff-column">
-                    <h4>Metadata</h4>
-                    {diffResult.metadata.length === 0 ? (
-                      <p className="message-suggestion">No metadata changes.</p>
-                    ) : (
-                      diffResult.metadata.map((change) => (
-                        <article className="diff-card" key={change.field}>
-                          <strong>{change.field}</strong>
-                          <p className="message-meta">Before: {change.before ?? "(empty)"}</p>
-                          <p className="message-meta">After: {change.after ?? "(empty)"}</p>
-                        </article>
-                      ))
-                    )}
+                  <div className="diff-grid">
+                    <div className="diff-column">
+                      <h4>Structure</h4>
+                      {diffResult.structure.length === 0 ? (
+                        <p className="message-suggestion">No structure changes.</p>
+                      ) : (
+                        diffResult.structure.map((change) => (
+                          <article className="diff-card" key={`${change.change}-${change.path}`}>
+                            <strong>{change.change}</strong>
+                            <p>{change.path}</p>
+                          </article>
+                        ))
+                      )}
+                    </div>
+                    <div className="diff-column">
+                      <h4>Metadata</h4>
+                      {diffResult.metadata.length === 0 ? (
+                        <p className="message-suggestion">No metadata changes.</p>
+                      ) : (
+                        diffResult.metadata.map((change) => (
+                          <article className="diff-card" key={change.field}>
+                            <strong>{change.field}</strong>
+                            <p className="message-meta">Before: {change.before ?? "(empty)"}</p>
+                            <p className="message-meta">After: {change.after ?? "(empty)"}</p>
+                          </article>
+                        ))
+                      )}
+                    </div>
+                    <div className="diff-column diff-column-wide">
+                      <h4>Chapter text</h4>
+                      {diffResult.chapters.length === 0 ? (
+                        <p className="message-suggestion">No chapter changes.</p>
+                      ) : (
+                        diffResult.chapters.map((change) => (
+                          <article className="diff-card" key={change.path}>
+                            <strong>{change.path}</strong>
+                            <p className="message-meta">Before: {change.before ?? "(missing)"}</p>
+                            <p className="message-meta">After: {change.after ?? "(missing)"}</p>
+                          </article>
+                        ))
+                      )}
+                    </div>
                   </div>
-                  <div className="diff-column diff-column-wide">
-                    <h4>Chapter text</h4>
-                    {diffResult.chapters.length === 0 ? (
-                      <p className="message-suggestion">No chapter changes.</p>
-                    ) : (
-                      diffResult.chapters.map((change) => (
-                        <article className="diff-card" key={change.path}>
-                          <strong>{change.path}</strong>
-                          <p className="message-meta">Before: {change.before ?? "(missing)"}</p>
-                          <p className="message-meta">After: {change.after ?? "(missing)"}</p>
-                        </article>
-                      ))
-                    )}
+                </section>
+              ) : (
+                <section className="diff-panel">
+                  <div className="message-topline">
+                    <h3>Diff</h3>
                   </div>
-                </div>
-              </section>
+                  <p className="message-suggestion">
+                    Upload or choose two EPUB files, then run Compare EPUBs to review structure, metadata, and chapter changes.
+                  </p>
+                </section>
+              )
             ) : null}
           </div>
         </div>
@@ -1017,4 +1132,14 @@ function buildConversionFormData(
     formData.append("pageSize", options.pageSize);
   }
   return formData;
+}
+
+function getMessageTargetPath(message: ValidationResult["messages"][number]): string | null {
+  const explicitFile = message.file;
+  if (explicitFile.startsWith("EPUB/") || explicitFile.startsWith("META-INF/")) {
+    return explicitFile;
+  }
+
+  const embeddedPath = message.message.match(/(EPUB\/[A-Za-z0-9._/-]+\.(?:xhtml|html|opf|xml|ncx|css))/)?.[1];
+  return embeddedPath ?? null;
 }
