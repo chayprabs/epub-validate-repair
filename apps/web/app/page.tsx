@@ -1,7 +1,9 @@
+import { ValidationWorkbench } from "../components/validation-workbench";
+
 const features = [
-  "Validation with epubcheck severity mapping",
-  "Opt-in repair recipes for common EPUB faults",
-  "Metadata editing, conversion, diff, and batch workflows"
+  "Fixture-backed validation API with downloadable HTML and JSON reports",
+  "Worker-side artifact storage and shared validation types",
+  "Next.js upload workbench ready for repair, metadata, convert, and diff tabs"
 ];
 
 export default function HomePage() {
@@ -26,6 +28,7 @@ export default function HomePage() {
           ))}
         </ul>
       </section>
+      <ValidationWorkbench />
     </main>
   );
 }

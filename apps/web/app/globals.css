@@ -89,6 +89,122 @@ a {
   color: var(--muted);
 }
 
+.workbench {
+  margin-top: 24px;
+}
+
+.workbench-header,
+.upload-row,
+.result-grid,
+.artifact-links,
+.message-topline {
+  display: flex;
+  gap: 16px;
+}
+
+.workbench-header,
+.upload-row,
+.message-topline {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.upload-row {
+  margin: 20px 0 12px;
+  flex-wrap: wrap;
+}
+
+.file-input {
+  flex: 1 1 320px;
+  border: 1px dashed var(--border);
+  border-radius: 16px;
+  padding: 14px;
+  background: rgba(15, 23, 32, 0.7);
+  color: var(--muted);
+}
+
+.action {
+  border: 0;
+  border-radius: 999px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #f1b24a, #df7d38);
+  color: #1b1205;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.action:disabled {
+  opacity: 0.72;
+  cursor: progress;
+}
+
+.status-line,
+.error-line,
+.message-meta,
+.message-suggestion {
+  color: var(--muted);
+}
+
+.error-line {
+  color: #ffb4a4;
+}
+
+.result-grid {
+  align-items: flex-start;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.result-summary {
+  flex: 0 0 220px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 16px;
+  background: rgba(5, 10, 16, 0.45);
+}
+
+.message-list {
+  flex: 1 1 420px;
+  display: grid;
+  gap: 12px;
+}
+
+.message-card {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 16px;
+  background: rgba(5, 10, 16, 0.45);
+}
+
+.artifact-links {
+  flex-direction: column;
+  gap: 8px;
+}
+
+.subtle {
+  background: rgba(190, 213, 231, 0.12);
+  color: var(--muted);
+}
+
+.pass {
+  background: rgba(92, 214, 138, 0.14);
+  color: #abf3c1;
+}
+
+.fail {
+  background: rgba(255, 146, 128, 0.14);
+  color: #ffb9ad;
+}
+
+.severity-error {
+  border-color: rgba(255, 146, 128, 0.35);
+}
+
+.severity-info,
+.severity-usage {
+  border-color: rgba(241, 178, 74, 0.35);
+}
+
 @media (max-width: 640px) {
   .shell {
     width: min(100vw - 24px, 960px);
@@ -99,5 +215,11 @@ a {
   .panel {
     border-radius: 20px;
     padding: 20px;
+  }
+
+  .workbench-header,
+  .upload-row,
+  .result-grid {
+    display: grid;
   }
 }
