@@ -26,6 +26,13 @@ const conversionTargets: Array<{ label: string; value: ConversionTarget }> = [
   { label: "PDF", value: "pdf" },
   { label: "HTML", value: "html" }
 ];
+const sampleFiles = [
+  "broken-manifest.epub",
+  "kdp-ready.epub",
+  "invalid-xhtml.epub",
+  "volume-1.epub",
+  "volume-2.epub"
+] as const;
 const emptyMetadataForm = {
   title: "",
   subtitle: "",
@@ -46,6 +53,7 @@ export function ValidationWorkbench() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [compareFile, setCompareFile] = useState<File | null>(null);
   const [batchFile, setBatchFile] = useState<File | null>(null);
+  const [urlInput, setUrlInput] = useState("");
   const [result, setResult] = useState<ValidationResult | null>(null);
   const [recipes, setRecipes] = useState<RepairRecipe[]>([]);
   const [selectedFixes, setSelectedFixes] = useState<RepairFixId[]>([]);
@@ -158,15 +166,20 @@ export function ValidationWorkbench() {
   }, [result, selectedPath]);
 
   function onSubmit() {
-    if (!selectedFile) {
-      setError("Choose an EPUB fixture or upload a file first.");
+    if (!selectedFile && !urlInput.trim()) {
+      setError("Choose an EPUB fixture, paste a remote URL, or upload a file first.");
       return;
     }
 
     setError(null);
     startTransition(async () => {
       const formData = new FormData();
-      formData.append("file", selectedFile);
+      if (selectedFile) {
+        formData.append("file", selectedFile);
+      }
+      if (!selectedFile && urlInput.trim()) {
+        formData.append("url", urlInput.trim());
+      }
 
       const response = await fetch(`${workerUrl}/v1/validate`, {
         method: "POST",
@@ -182,6 +195,21 @@ export function ValidationWorkbench() {
       const payload = (await response.json()) as ValidationResult;
       setResult(payload);
     });
+  }
+
+  async function loadSample(name: (typeof sampleFiles)[number]) {
+    setError(null);
+    const response = await fetch(`/api/samples/${name}`);
+    if (!response.ok) {
+      setError("Sample loading failed.");
+      return;
+    }
+
+    const blob = await response.blob();
+    const sample = new File([blob], name, { type: "application/epub+zip" });
+    setSelectedFile(sample);
+    setUrlInput("");
+    setResult(null);
   }
 
   function toggleFix(fixId: RepairFixId) {
@@ -362,6 +390,7 @@ export function ValidationWorkbench() {
           className="file-input"
           onChange={(event) => {
             setSelectedFile(event.target.files?.[0] ?? null);
+            setUrlInput("");
             setResult(null);
           }}
           type="file"
@@ -369,6 +398,32 @@ export function ValidationWorkbench() {
         <button className="action" disabled={isPending} onClick={onSubmit} type="button">
           {isPending ? "Validating..." : "Validate EPUB"}
         </button>
+      </div>
+
+      <div className="upload-row compare-row">
+        <input
+          className="file-input"
+          onChange={(event) => {
+            setUrlInput(event.target.value);
+            if (event.target.value) {
+              setSelectedFile(null);
+            }
+          }}
+          placeholder="https://example.com/book.epub"
+          type="url"
+          value={urlInput}
+        />
+        <button className="action secondary" disabled={isPending || !urlInput.trim()} onClick={onSubmit} type="button">
+          Validate URL
+        </button>
+      </div>
+
+      <div className="recipe-strip">
+        {sampleFiles.map((sample) => (
+          <button className="recipe-pill sample-pill" key={sample} onClick={() => void loadSample(sample)} type="button">
+            {sample}
+          </button>
+        ))}
       </div>
 
       <div className="upload-row compare-row">
@@ -412,6 +467,7 @@ export function ValidationWorkbench() {
       ) : null}
 
       {selectedFile ? <p className="status-line">Selected: {selectedFile.name}</p> : null}
+      {urlInput ? <p className="status-line">Remote URL: {urlInput}</p> : null}
       {compareFile ? <p className="status-line">Compare against: {compareFile.name}</p> : null}
       {batchFile ? <p className="status-line">Batch archive: {batchFile.name}</p> : null}
       {error ? <p className="error-line">{error}</p> : null}

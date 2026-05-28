@@ -3,6 +3,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from src.main import app
+from src.routes import validate as validate_route
 
 FIXTURE_DIR = Path(__file__).resolve().parents[3] / "tests" / "fixtures"
 
@@ -64,3 +65,24 @@ def test_invalid_xhtml_is_marked_fixable() -> None:
     xhtml_messages = [message for message in payload["messages"] if message["id"] == "XHTML_INVALID"]
     assert xhtml_messages
     assert xhtml_messages[0]["fixableBy"] == "invalid-xhtml"
+
+
+def test_validate_url_downloads_remote_epub(monkeypatch) -> None:
+    client = TestClient(app)
+    fixture_path = FIXTURE_DIR / "kdp-ready.epub"
+
+    def fake_download(url: str) -> tuple[str, bytes]:
+        assert url == "https://example.com/kdp-ready.epub"
+        return "kdp-ready.epub", fixture_path.read_bytes()
+
+    monkeypatch.setattr(validate_route, "_download_remote_epub", fake_download)
+
+    response = client.post(
+        "/v1/validate",
+        data={"url": "https://example.com/kdp-ready.epub"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["counts"]["error"] == 0
+    assert payload["metadata"]["title"] == "KDP Ready"
