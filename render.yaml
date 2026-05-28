@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: epubdoctor-web
+    runtime: docker
+    plan: free
+    branch: main
+    autoDeploy: true
+    dockerContext: .
+    dockerfilePath: ./apps/web/Dockerfile
+    healthCheckPath: /
+    envVars:
+      - key: EPUBDOCTOR_WORKER_URL
+        fromService:
+          name: epubdoctor-worker
+          type: pserv
+          property: host
+
+  - type: pserv
+    name: epubdoctor-worker
+    runtime: docker
+    plan: free
+    branch: main
+    autoDeploy: true
+    dockerContext: .
+    dockerfilePath: ./apps/worker/Dockerfile
+    envVars:
+      - key: EPUBDOCTOR_RETENTION_TTL_SECONDS
+        value: "3600"

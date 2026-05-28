@@ -3,10 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const workerOrigin =
-  process.env.EPUBDOCTOR_WORKER_URL ??
-  process.env.NEXT_PUBLIC_WORKER_URL ??
-  "http://127.0.0.1:8000";
+const workerOrigin = resolveWorkerOrigin();
 
 async function proxyRequest(
   request: NextRequest,
@@ -40,6 +37,15 @@ async function proxyRequest(
     status: upstreamResponse.status,
     headers: responseHeaders
   });
+}
+
+function resolveWorkerOrigin(): string {
+  const configuredWorker =
+    process.env.EPUBDOCTOR_WORKER_URL ??
+    process.env.NEXT_PUBLIC_WORKER_URL ??
+    "http://127.0.0.1:8000";
+
+  return configuredWorker.includes("://") ? configuredWorker : `http://${configuredWorker}`;
 }
 
 export async function GET(
