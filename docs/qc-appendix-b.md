@@ -17,6 +17,19 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 - `python -m py_compile scripts/measure_qc.py`
 - `docker compose config`
 
+### Passing remote CI checks
+
+- GitHub Actions run `26602899351` on commit `1cc08f2` completed successfully for `web`, `worker`, and `containers`.
+- `worker` job used hosted Python `3.12.13`.
+- `worker` job result: `16 passed in 0.77s`.
+- `containers` job built both images successfully:
+  - `docker build -f apps/worker/Dockerfile -t epubdoctor-worker:ci .`
+  - `docker build -f apps/web/Dockerfile -t epubdoctor-web:ci .`
+- `containers` job image budget check result:
+  - `worker_size_bytes=1146627595`
+  - Budget gate: `<= 1610612736` bytes (`1.5 GB`)
+- Worker container build now uses `python:3.12-slim-bookworm`, which resolved the previous Debian package availability failure for `openjdk-17-jre-headless` on GitHub-hosted runners.
+
 ### Product behaviors verified in tests
 
 - `broken-manifest.epub` validates with 4 errors and those errors map to repair recipes.
@@ -34,8 +47,8 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 - Run `docker compose up --build -d` and capture health evidence.
 - Confirm worker warm-up log line and `/health` runtime readiness output.
 - Measure cold and warm validation latency.
-- Capture worker image size and confirm it is `<= 1.5 GB`.
-- Current status: `VERIFY-DEFERRED` on this host because Docker Desktop lost the Linux engine pipe during image build attempts.
+- Worker image size budget is now qualified in remote CI: `1146627595` bytes, which is below the `1.5 GB` gate.
+- Current status for local container runtime remains `VERIFY-DEFERRED` on this host because Docker Desktop lost the Linux engine pipe during image build attempts.
 - Current status: host Python is `3.14.3`, and a disposable worker venv failed to install `lxml`, `Pillow`, and `pydantic-core`, so non-Docker local worker startup is not a viable substitute on this machine.
 
 ### Performance
