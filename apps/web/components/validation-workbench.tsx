@@ -6,6 +6,7 @@ import type {
   CoverPreset,
   ConversionResult,
   ConversionTarget,
+  DiffResult,
   EpubMetadata,
   MetadataUpdateResult,
   RepairFixId,
@@ -42,6 +43,7 @@ const emptyMetadataForm = {
 
 export function ValidationWorkbench() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [compareFile, setCompareFile] = useState<File | null>(null);
   const [result, setResult] = useState<ValidationResult | null>(null);
   const [recipes, setRecipes] = useState<RepairRecipe[]>([]);
   const [selectedFixes, setSelectedFixes] = useState<RepairFixId[]>([]);
@@ -57,11 +59,13 @@ export function ValidationWorkbench() {
   const [embedFonts, setEmbedFonts] = useState(false);
   const [stripCss, setStripCss] = useState(false);
   const [conversionResult, setConversionResult] = useState<ConversionResult | null>(null);
+  const [diffResult, setDiffResult] = useState<DiffResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isRepairPending, startRepairTransition] = useTransition();
   const [isMetadataPending, startMetadataTransition] = useTransition();
   const [isConvertPending, startConvertTransition] = useTransition();
+  const [isDiffPending, startDiffTransition] = useTransition();
 
   useEffect(() => {
     void (async () => {
@@ -81,6 +85,7 @@ export function ValidationWorkbench() {
       setSelectedPath(null);
       setPreview(null);
       setConversionResult(null);
+      setDiffResult(null);
       return;
     }
 
@@ -282,6 +287,34 @@ export function ValidationWorkbench() {
     });
   }
 
+  function onDiff() {
+    if (!selectedFile || !compareFile) {
+      setError("Choose two EPUB files before running a diff.");
+      return;
+    }
+
+    setError(null);
+    startDiffTransition(async () => {
+      const formData = new FormData();
+      formData.append("fileA", selectedFile);
+      formData.append("fileB", compareFile);
+
+      const response = await fetch(`${workerUrl}/v1/diff`, {
+        method: "POST",
+        body: formData
+      });
+
+      if (!response.ok) {
+        setDiffResult(null);
+        setError("Diff failed. The worker could not compare the two EPUB files.");
+        return;
+      }
+
+      const payload = (await response.json()) as DiffResult;
+      setDiffResult(payload);
+    });
+  }
+
   return (
     <section className="panel workbench">
       <div className="workbench-header">
@@ -307,6 +340,21 @@ export function ValidationWorkbench() {
         </button>
       </div>
 
+      <div className="upload-row compare-row">
+        <input
+          accept=".epub,application/epub+zip"
+          className="file-input"
+          onChange={(event) => {
+            setCompareFile(event.target.files?.[0] ?? null);
+            setDiffResult(null);
+          }}
+          type="file"
+        />
+        <button className="action secondary" disabled={isDiffPending} onClick={onDiff} type="button">
+          {isDiffPending ? "Comparing..." : "Compare EPUBs"}
+        </button>
+      </div>
+
       {recipes.length > 0 ? (
         <div className="recipe-strip">
           {recipes.map((recipe) => (
@@ -318,6 +366,7 @@ export function ValidationWorkbench() {
       ) : null}
 
       {selectedFile ? <p className="status-line">Selected: {selectedFile.name}</p> : null}
+      {compareFile ? <p className="status-line">Compare against: {compareFile.name}</p> : null}
       {error ? <p className="error-line">{error}</p> : null}
 
       {result ? (
@@ -613,6 +662,60 @@ export function ValidationWorkbench() {
                     {preview && preview.kind !== "image" && preview.kind !== "xhtml" ? (
                       <pre>{preview.text}</pre>
                     ) : null}
+                  </div>
+                </div>
+              </section>
+            ) : null}
+
+            {diffResult ? (
+              <section className="diff-panel">
+                <div className="message-topline">
+                  <h3>Diff</h3>
+                  <span className="message-meta">
+                    {diffResult.structure.length + diffResult.metadata.length + diffResult.chapters.length} changes
+                  </span>
+                </div>
+                <div className="diff-grid">
+                  <div className="diff-column">
+                    <h4>Structure</h4>
+                    {diffResult.structure.length === 0 ? (
+                      <p className="message-suggestion">No structure changes.</p>
+                    ) : (
+                      diffResult.structure.map((change) => (
+                        <article className="diff-card" key={`${change.change}-${change.path}`}>
+                          <strong>{change.change}</strong>
+                          <p>{change.path}</p>
+                        </article>
+                      ))
+                    )}
+                  </div>
+                  <div className="diff-column">
+                    <h4>Metadata</h4>
+                    {diffResult.metadata.length === 0 ? (
+                      <p className="message-suggestion">No metadata changes.</p>
+                    ) : (
+                      diffResult.metadata.map((change) => (
+                        <article className="diff-card" key={change.field}>
+                          <strong>{change.field}</strong>
+                          <p className="message-meta">Before: {change.before ?? "(empty)"}</p>
+                          <p className="message-meta">After: {change.after ?? "(empty)"}</p>
+                        </article>
+                      ))
+                    )}
+                  </div>
+                  <div className="diff-column diff-column-wide">
+                    <h4>Chapter text</h4>
+                    {diffResult.chapters.length === 0 ? (
+                      <p className="message-suggestion">No chapter changes.</p>
+                    ) : (
+                      diffResult.chapters.map((change) => (
+                        <article className="diff-card" key={change.path}>
+                          <strong>{change.path}</strong>
+                          <p className="message-meta">Before: {change.before ?? "(missing)"}</p>
+                          <p className="message-meta">After: {change.after ?? "(missing)"}</p>
+                        </article>
+                      ))
+                    )}
                   </div>
                 </div>
               </section>

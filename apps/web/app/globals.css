@@ -115,6 +115,10 @@ a {
   flex-wrap: wrap;
 }
 
+.compare-row {
+  margin-top: 0;
+}
+
 .recipe-strip {
   flex-wrap: wrap;
   margin: 0 0 18px;
@@ -216,6 +220,13 @@ a {
   background: rgba(5, 10, 16, 0.45);
 }
 
+.diff-panel {
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 16px;
+  background: rgba(5, 10, 16, 0.45);
+}
+
 .structure-panel {
   border: 1px solid var(--border);
   border-radius: 20px;
@@ -293,6 +304,37 @@ a {
   margin-top: 16px;
   display: grid;
   gap: 10px;
+}
+
+.diff-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.diff-column {
+  display: grid;
+  gap: 10px;
+}
+
+.diff-column h4 {
+  margin: 0;
+}
+
+.diff-column-wide {
+  grid-column: 1 / -1;
+}
+
+.diff-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.diff-card p {
+  margin: 6px 0 0;
 }
 
 .convert-result pre {
@@ -465,7 +507,15 @@ a {
     grid-template-columns: 1fr;
   }
 
+  .diff-grid {
+    grid-template-columns: 1fr;
+  }
+
   .metadata-span-2 {
+    grid-column: auto;
+  }
+
+  .diff-column-wide {
     grid-column: auto;
   }
 }
