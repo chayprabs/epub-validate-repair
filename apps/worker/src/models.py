@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 ValidationSeverity = Literal["error", "warning", "info", "usage"]
 CoverPreset = Literal["kdp", "apple", "kobo"]
+ConversionTarget = Literal["epub", "mobi", "azw3", "pdf", "html"]
 RepairFixId = Literal[
     "manifest-mismatch",
     "spine-reference",
@@ -102,6 +103,26 @@ class MetadataUpdateRequest(BaseModel):
 class MetadataUpdateResult(BaseModel):
     jobId: str
     validation: "ValidationResult"
+
+
+class ConversionOptions(BaseModel):
+    tocDepth: int | None = None
+    embedFonts: bool = False
+    stripCss: bool = False
+    pageSize: str | None = None
+
+
+class ConversionRequest(BaseModel):
+    jobId: str
+    target: ConversionTarget
+    options: ConversionOptions = Field(default_factory=ConversionOptions)
+
+
+class ConversionResult(BaseModel):
+    jobId: str
+    target: ConversionTarget
+    artifactUrl: str
+    log: str
 
 
 class UnpackEntry(BaseModel):

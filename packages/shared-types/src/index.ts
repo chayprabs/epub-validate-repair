@@ -1,5 +1,6 @@
 export type ValidationSeverity = "error" | "warning" | "info" | "usage";
 export type CoverPreset = "kdp" | "apple" | "kobo";
+export type ConversionTarget = "epub" | "mobi" | "azw3" | "pdf" | "html";
 export type RepairFixId =
   | "manifest-mismatch"
   | "spine-reference"
@@ -96,6 +97,20 @@ export interface RepairResult {
 export interface MetadataUpdateResult {
   jobId: string;
   validation: ValidationResult;
+}
+
+export interface ConversionOptions {
+  tocDepth?: number | null;
+  embedFonts: boolean;
+  stripCss: boolean;
+  pageSize?: string | null;
+}
+
+export interface ConversionResult {
+  jobId: string;
+  target: ConversionTarget;
+  artifactUrl: string;
+  log: string;
 }
 
 export type UnpackKind =

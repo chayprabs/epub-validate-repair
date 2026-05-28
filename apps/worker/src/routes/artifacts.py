@@ -1,3 +1,4 @@
+import mimetypes
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
@@ -16,5 +17,7 @@ def get_artifact(job_id: str, artifact_name: str) -> FileResponse:
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail="Artifact not found.") from exc
 
-    media_type = "application/json" if artifact_path.suffix == ".json" else "text/html"
+    media_type = mimetypes.guess_type(str(artifact_path))[0]
+    if media_type is None:
+        media_type = "application/octet-stream"
     return FileResponse(Path(artifact_path), media_type=media_type)

@@ -28,12 +28,21 @@ class JobStore:
         artifact_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return artifact_path
 
+    def write_binary_artifact(self, job_id: str, artifact_name: str, payload: bytes) -> Path:
+        artifact_path = self.root_dir / job_id / artifact_name
+        artifact_path.write_bytes(payload)
+        return artifact_path
+
     def resolve_input(self, job_id: str) -> Path:
         job_dir = (self.root_dir / job_id).resolve()
         if self.root_dir != job_dir.parent or not job_dir.exists():
             raise FileNotFoundError(job_id)
 
-        candidates = sorted(path for path in job_dir.glob("*.epub") if path.is_file())
+        candidates = sorted(
+            path
+            for path in job_dir.iterdir()
+            if path.is_file() and path.name not in {"report.json", "report.html"}
+        )
         if not candidates:
             raise FileNotFoundError(job_id)
         return candidates[0]
