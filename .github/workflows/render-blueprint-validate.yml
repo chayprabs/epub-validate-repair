@@ -1,0 +1,26 @@
+name: render-blueprint-validate
+
+on:
+  workflow_dispatch:
+
+jobs:
+  validate-render-blueprint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Validate render.yaml with the Render CLI
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_WORKSPACE_ID: ${{ vars.RENDER_WORKSPACE_ID }}
+        run: |
+          if [ -z "${RENDER_API_KEY}" ] || [ -z "${RENDER_WORKSPACE_ID}" ]; then
+            echo "Skipping Render blueprint validation because RENDER_API_KEY or RENDER_WORKSPACE_ID is not configured."
+            exit 0
+          fi
+
+          curl -L https://github.com/render-oss/cli/releases/download/v2.19.0/cli_2.19.0_linux_amd64.zip -o render.zip
+          unzip render.zip
+          chmod +x cli_v2.19.0
+          sudo mv cli_v2.19.0 /usr/local/bin/render
+
+          render blueprints validate render.yaml --workspace "${RENDER_WORKSPACE_ID}" -o json

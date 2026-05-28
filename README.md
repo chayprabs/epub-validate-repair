@@ -80,6 +80,8 @@ The repo includes [`render.yaml`](render.yaml) for a public Next.js web service 
 Once the hosted app exists, set these GitHub Actions values so the repo can verify and, if needed, manually trigger the deployment:
 
 - Repository variable: `EPUBDOCTOR_PUBLIC_URL`
+- Repository variable: `RENDER_WORKSPACE_ID`
+- Repository secret: `RENDER_API_KEY`
 - Repository secret: `RENDER_WORKER_DEPLOY_HOOK_URL`
 - Repository secret: `RENDER_WEB_DEPLOY_HOOK_URL`
 
@@ -90,6 +92,8 @@ python scripts/verify_hosted_deployment.py --base-url https://your-public-domain
 ```
 
 It checks the homepage, source link, SEO routes, proxied worker health, and real hosted validation requests for `broken-manifest.epub` and `kdp-ready.epub`.
+
+If you want GitHub to validate the Render blueprint itself before deployment, the `render-blueprint-validate` workflow also needs `RENDER_API_KEY` and `RENDER_WORKSPACE_ID`.
 
 ## Sample fixtures
 

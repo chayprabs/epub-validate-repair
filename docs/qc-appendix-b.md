@@ -136,6 +136,7 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 - Hosted rollout readiness is stronger now:
   - `.github/workflows/render-deploy.yml` can trigger both Render services by deploy hook once the repo secrets exist.
   - `.github/workflows/hosted-verification.yml` can run `scripts/verify_hosted_deployment.py` against the public URL once the repo variable exists.
+  - `.github/workflows/render-blueprint-validate.yml` can validate `render.yaml` with the official Render CLI once `RENDER_API_KEY` and `RENDER_WORKSPACE_ID` are configured.
   - `scripts/verify_hosted_deployment.py` checks the homepage, source link, SEO routes, proxied worker health, and hosted validation for both `broken-manifest.epub` and `kdp-ready.epub`.
 
 ## Remaining qualification work
@@ -145,7 +146,8 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 - Run `docker compose up --build -d` and capture health evidence on a healthy local Docker host.
 - `docker compose up --build -d` remains the only unproven part of the local runtime path; the live worker `/health` readiness output and warm-up log line are now qualified in remote CI.
 - A hosted deployment is still missing. The repo now includes `render.yaml` for a Render blueprint, but there is not yet a live public web URL or HTTPS certificate evidence for Section 5.14 / 5.16.
-- There are currently no deployment credentials or GitHub Actions variables configured in this repository for Render, Vercel, Netlify, or Cloudflare, so hosted rollout still requires external platform setup. The new hosted verification and Render deploy workflows will remain no-op until `EPUBDOCTOR_PUBLIC_URL`, `RENDER_WORKER_DEPLOY_HOOK_URL`, and `RENDER_WEB_DEPLOY_HOOK_URL` are configured.
+- There are currently no deployment credentials or GitHub Actions variables configured in this repository for Render, Vercel, Netlify, or Cloudflare, so hosted rollout still requires external platform setup. The new hosted verification, Render deploy, and Render blueprint validation workflows will remain no-op until `EPUBDOCTOR_PUBLIC_URL`, `RENDER_API_KEY`, `RENDER_WORKSPACE_ID`, `RENDER_WORKER_DEPLOY_HOOK_URL`, and `RENDER_WEB_DEPLOY_HOOK_URL` are configured.
+- Direct local Render CLI validation is also externally blocked on the same missing Render auth state. The official CLI currently exits with `Error: no workspace specified and no default workspace set. Use --workspace or run 'render workspace set'` when run here against `render.yaml`.
 - Worker image size budget is now qualified in remote CI: latest passing result `1180238441` bytes, which is below the `1.5 GB` gate.
 - Built worker container smoke is now qualified in remote CI for Java + EPUBCheck + Calibre execution against the acceptance fixture path.
 - Built worker service readiness is now qualified in remote CI for live `/health` startup with `javaReady`, `calibreReady`, and `epubcheckReady` all `true`.
