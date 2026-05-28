@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 
 ValidationSeverity = Literal["error", "warning", "info", "usage"]
+CoverPreset = Literal["kdp", "apple", "kobo"]
 RepairFixId = Literal[
     "manifest-mismatch",
     "spine-reference",
@@ -43,12 +44,22 @@ class TocItem(BaseModel):
     children: list["TocItem"] = Field(default_factory=list)
 
 
+class Contributor(BaseModel):
+    name: str
+    role: str = "aut"
+
+
+class Identifier(BaseModel):
+    type: str
+    value: str
+
+
 class EpubMetadata(BaseModel):
     title: str | None = None
     subtitle: str | None = None
-    contributors: list[str] = Field(default_factory=list)
+    contributors: list[Contributor] = Field(default_factory=list)
     language: str | None = None
-    identifiers: list[str] = Field(default_factory=list)
+    identifiers: list[Identifier] = Field(default_factory=list)
     publisher: str | None = None
     publishedAt: str | None = None
     description: str | None = None
@@ -78,6 +89,18 @@ class RepairRequest(BaseModel):
 class RepairResult(BaseModel):
     jobId: str
     appliedFixes: list[RepairFixId]
+    validation: "ValidationResult"
+
+
+class MetadataUpdateRequest(BaseModel):
+    jobId: str
+    metadata: EpubMetadata
+    coverImageDataUrl: str | None = None
+    coverPreset: CoverPreset = "kdp"
+
+
+class MetadataUpdateResult(BaseModel):
+    jobId: str
     validation: "ValidationResult"
 
 

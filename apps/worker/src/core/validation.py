@@ -7,6 +7,7 @@ from xml.etree import ElementTree
 
 from lxml import etree
 
+from src.core.metadata import extract_metadata
 from src.models import (
     EpubMetadata,
     EpubcheckMessage,
@@ -93,7 +94,7 @@ def validate_epub(epub_path: str, job_id: str, base_artifact_url: str) -> Valida
         if package_dir == ".":
             package_dir = ""
 
-        metadata = _extract_metadata(package_root)
+        metadata = extract_metadata(package_root)
         manifest, manifest_by_id, manifest_hrefs = _extract_manifest(package_root)
         spine = _extract_spine(package_root, manifest_by_id)
         toc = _extract_toc(package_root, manifest_by_id)
@@ -237,44 +238,6 @@ def _validate_xhtml(
             suggestion=f"Recover and rewrite {archive_name} as valid XHTML.",
             fixableBy="invalid-xhtml",
         )
-
-
-def _extract_metadata(package_root: ElementTree.Element) -> EpubMetadata:
-    metadata_root = package_root.find("opf:metadata", NAMESPACES)
-    if metadata_root is None:
-        return EpubMetadata()
-
-    def first_text(selector: str) -> str | None:
-        element = metadata_root.find(selector, NAMESPACES)
-        return element.text.strip() if element is not None and element.text else None
-
-    contributors = [
-        element.text.strip()
-        for element in metadata_root.findall("dc:creator", NAMESPACES)
-        if element.text
-    ]
-    identifiers = [
-        element.text.strip()
-        for element in metadata_root.findall("dc:identifier", NAMESPACES)
-        if element.text
-    ]
-    subjects = [
-        element.text.strip()
-        for element in metadata_root.findall("dc:subject", NAMESPACES)
-        if element.text
-    ]
-
-    return EpubMetadata(
-        title=first_text("dc:title"),
-        language=first_text("dc:language"),
-        contributors=contributors,
-        identifiers=identifiers,
-        publisher=first_text("dc:publisher"),
-        publishedAt=first_text("dc:date"),
-        description=first_text("dc:description"),
-        subjects=subjects,
-        rights=first_text("dc:rights"),
-    )
 
 
 def _extract_manifest(

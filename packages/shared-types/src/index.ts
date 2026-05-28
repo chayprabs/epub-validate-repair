@@ -1,4 +1,5 @@
 export type ValidationSeverity = "error" | "warning" | "info" | "usage";
+export type CoverPreset = "kdp" | "apple" | "kobo";
 export type RepairFixId =
   | "manifest-mismatch"
   | "spine-reference"
@@ -36,12 +37,22 @@ export interface TocItem {
   children: TocItem[];
 }
 
+export interface Contributor {
+  name: string;
+  role: string;
+}
+
+export interface Identifier {
+  type: string;
+  value: string;
+}
+
 export interface EpubMetadata {
   title?: string;
   subtitle?: string;
-  contributors: string[];
+  contributors: Contributor[];
   language?: string;
-  identifiers: string[];
+  identifiers: Identifier[];
   publisher?: string;
   publishedAt?: string;
   description?: string;
@@ -79,6 +90,11 @@ export interface ValidationResult {
 export interface RepairResult {
   jobId: string;
   appliedFixes: RepairFixId[];
+  validation: ValidationResult;
+}
+
+export interface MetadataUpdateResult {
+  jobId: string;
   validation: ValidationResult;
 }
 
