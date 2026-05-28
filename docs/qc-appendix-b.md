@@ -22,6 +22,7 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 
 ### Passing remote CI checks
 
+- GitHub Actions run `26607197837` on commit `5b2f7ff` completed successfully for `web`, `worker`, and `containers` on `main` after adding the public source header/footer polish.
 - GitHub Actions run `26606874348` on commit `244606a` completed successfully for `web`, `worker`, and `containers` on `main` after upgrading the workflow actions to current Node 24-native majors.
 - This run completed without the earlier Node 20 deprecation annotations.
 - GitHub Actions run `26606506881` on commit `254dc07` completed successfully for `web`, `worker`, and `containers` on `main`.
@@ -125,12 +126,17 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 - Validation report snapshots are now pinned for `broken-manifest.epub`, `kdp-ready.epub`, `invalid-xhtml.epub`, `legacy-epub2.epub`, `volume-1.epub`, and `volume-2.epub` in `tests/fixtures/snapshots/validation/`.
 - Every repair recipe now has a checked golden result in `tests/fixtures/goldens/repair/`, covering manifest mismatch, spine refs, TOC generation, invalid XHTML recovery, mimetype rewrite, missing cover injection, and container.xml repair.
 - The production web now proxies worker requests through `apps/web/app/api/worker/[...path]/route.ts`, which keeps validation, artifact downloads, and previews on the same origin and makes a public-web/private-worker deployment possible.
+- The worker proxy now rewrites JSON artifact URLs to the public `/api/worker/...` origin server-side, so hosted API consumers no longer receive private worker URLs from validation, conversion, or batch responses.
 - Local production-mode smoke verified the proxy path:
   - web `http://127.0.0.1:3101`
   - worker `http://127.0.0.1:8100`
   - `broken-manifest.epub` validation completed successfully through `/api/worker/v1/validate`
   - report links were rewritten to `/api/worker/v1/artifacts/...`
   - "Open in viewer" switched into the Structure tab correctly
+- Hosted rollout readiness is stronger now:
+  - `.github/workflows/render-deploy.yml` can trigger both Render services by deploy hook once the repo secrets exist.
+  - `.github/workflows/hosted-verification.yml` can run `scripts/verify_hosted_deployment.py` against the public URL once the repo variable exists.
+  - `scripts/verify_hosted_deployment.py` checks the homepage, source link, SEO routes, proxied worker health, and hosted validation for both `broken-manifest.epub` and `kdp-ready.epub`.
 
 ## Remaining qualification work
 
@@ -139,7 +145,7 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 - Run `docker compose up --build -d` and capture health evidence on a healthy local Docker host.
 - `docker compose up --build -d` remains the only unproven part of the local runtime path; the live worker `/health` readiness output and warm-up log line are now qualified in remote CI.
 - A hosted deployment is still missing. The repo now includes `render.yaml` for a Render blueprint, but there is not yet a live public web URL or HTTPS certificate evidence for Section 5.14 / 5.16.
-- There are currently no deployment credentials or GitHub Actions variables configured in this repository for Render, Vercel, Netlify, or Cloudflare, so hosted rollout still requires external platform setup.
+- There are currently no deployment credentials or GitHub Actions variables configured in this repository for Render, Vercel, Netlify, or Cloudflare, so hosted rollout still requires external platform setup. The new hosted verification and Render deploy workflows will remain no-op until `EPUBDOCTOR_PUBLIC_URL`, `RENDER_WORKER_DEPLOY_HOOK_URL`, and `RENDER_WEB_DEPLOY_HOOK_URL` are configured.
 - Worker image size budget is now qualified in remote CI: latest passing result `1180238441` bytes, which is below the `1.5 GB` gate.
 - Built worker container smoke is now qualified in remote CI for Java + EPUBCheck + Calibre execution against the acceptance fixture path.
 - Built worker service readiness is now qualified in remote CI for live `/health` startup with `javaReady`, `calibreReady`, and `epubcheckReady` all `true`.

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { resolvePublicOrigin, resolveWorkerOrigin, rewriteWorkerPayload } from "../../../../lib/worker-proxy";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -32,20 +33,27 @@ async function proxyRequest(
 
   const responseHeaders = new Headers(upstreamResponse.headers);
   responseHeaders.set("Cache-Control", "no-store");
+  responseHeaders.delete("content-length");
+
+  if (responseHeaders.get("content-type")?.includes("application/json")) {
+    const payload = await upstreamResponse.json();
+    const publicOrigin = resolvePublicOrigin(
+      request.nextUrl.origin,
+      request.headers.get("x-forwarded-proto"),
+      request.headers.get("x-forwarded-host"),
+      request.headers.get("host")
+    );
+    const rewrittenPayload = rewriteWorkerPayload(payload, workerOrigin, publicOrigin);
+    return new NextResponse(JSON.stringify(rewrittenPayload), {
+      status: upstreamResponse.status,
+      headers: responseHeaders
+    });
+  }
 
   return new NextResponse(upstreamResponse.body, {
     status: upstreamResponse.status,
     headers: responseHeaders
   });
-}
-
-function resolveWorkerOrigin(): string {
-  const configuredWorker =
-    process.env.EPUBDOCTOR_WORKER_URL ??
-    process.env.NEXT_PUBLIC_WORKER_URL ??
-    "http://127.0.0.1:8000";
-
-  return configuredWorker.includes("://") ? configuredWorker : `http://${configuredWorker}`;
 }
 
 export async function GET(

@@ -75,6 +75,22 @@ Uploaded inputs and generated artifacts are stored under the worker temp directo
 
 The repo includes [`render.yaml`](render.yaml) for a public Next.js web service plus a private worker service. Set the repo root as the Render blueprint source, let Render create both services, and point your public custom domain at the web service once the deploy is healthy.
 
+### Hosted verification and deploy hooks
+
+Once the hosted app exists, set these GitHub Actions values so the repo can verify and, if needed, manually trigger the deployment:
+
+- Repository variable: `EPUBDOCTOR_PUBLIC_URL`
+- Repository secret: `RENDER_WORKER_DEPLOY_HOOK_URL`
+- Repository secret: `RENDER_WEB_DEPLOY_HOOK_URL`
+
+The hosted smoke script can then verify the public site end to end:
+
+```bash
+python scripts/verify_hosted_deployment.py --base-url https://your-public-domain.example
+```
+
+It checks the homepage, source link, SEO routes, proxied worker health, and real hosted validation requests for `broken-manifest.epub` and `kdp-ready.epub`.
+
 ## Sample fixtures
 
 Fixtures used by tests and manual QA live in `tests/fixtures/`:

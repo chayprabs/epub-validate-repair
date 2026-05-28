@@ -1,0 +1,29 @@
+name: render-deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  trigger-render-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy hooks
+        env:
+          RENDER_WEB_DEPLOY_HOOK_URL: ${{ secrets.RENDER_WEB_DEPLOY_HOOK_URL }}
+          RENDER_WORKER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_WORKER_DEPLOY_HOOK_URL }}
+          TARGET_SHA: ${{ github.sha }}
+        run: |
+          if [ -z "${RENDER_WORKER_DEPLOY_HOOK_URL}" ] || [ -z "${RENDER_WEB_DEPLOY_HOOK_URL}" ]; then
+            echo "Skipping Render deploy because the deploy hook secrets are not configured."
+            exit 0
+          fi
+
+          append_ref() {
+            case "$1" in
+              *\?*) printf '%s&ref=%s' "$1" "$TARGET_SHA" ;;
+              *) printf '%s?ref=%s' "$1" "$TARGET_SHA" ;;
+            esac
+          }
+
+          curl --fail --silent --show-error "$(append_ref "${RENDER_WORKER_DEPLOY_HOOK_URL}")"
+          curl --fail --silent --show-error "$(append_ref "${RENDER_WEB_DEPLOY_HOOK_URL}")"

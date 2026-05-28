@@ -1,0 +1,22 @@
+name: hosted-verification
+
+on:
+  workflow_dispatch:
+
+jobs:
+  verify-hosted:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Verify hosted deployment
+        env:
+          EPUBDOCTOR_PUBLIC_URL: ${{ vars.EPUBDOCTOR_PUBLIC_URL }}
+        run: |
+          if [ -z "${EPUBDOCTOR_PUBLIC_URL}" ]; then
+            echo "Skipping hosted verification because EPUBDOCTOR_PUBLIC_URL is not configured."
+            exit 0
+          fi
+          python scripts/verify_hosted_deployment.py --base-url "${EPUBDOCTOR_PUBLIC_URL}"
