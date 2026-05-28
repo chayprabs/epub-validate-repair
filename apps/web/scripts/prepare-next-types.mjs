@@ -5,7 +5,9 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const webRoot = path.resolve(__dirname, "..");
 const files = [
+  ".next/types/app/[slug]/page.ts",
   ".next/types/app/api/samples/[name]/route.ts",
+  ".next/types/app/api/worker/[...path]/route.ts",
   ".next/types/app/layout.ts",
   ".next/types/app/page.ts",
   ".next/types/cache-life.d.ts",

@@ -3,10 +3,8 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
-      args:
-        NEXT_PUBLIC_WORKER_URL: http://worker:8000
     environment:
-      NEXT_PUBLIC_WORKER_URL: http://worker:8000
+      EPUBDOCTOR_WORKER_URL: http://worker:8000
     ports:
       - "3000:3000"
     depends_on:

@@ -18,7 +18,7 @@ import type {
   ValidationResult
 } from "@epubdoctor/shared-types";
 
-const workerUrl = process.env.NEXT_PUBLIC_WORKER_URL ?? "http://localhost:8000";
+const workerUrl = "/api/worker";
 const defaultRecipes: RepairRecipe[] = [
   {
     id: "manifest-mismatch",
@@ -275,7 +275,7 @@ export function ValidationWorkbench() {
       }
 
       const payload = (await response.json()) as ValidationResult;
-      setResult(payload);
+      setResult(normalizeValidationResult(payload));
     });
   }
 
@@ -325,7 +325,7 @@ export function ValidationWorkbench() {
       }
 
       const payload = (await response.json()) as RepairResult;
-      setResult(payload.validation);
+      setResult(normalizeValidationResult(payload.validation));
     });
   }
 
@@ -362,7 +362,7 @@ export function ValidationWorkbench() {
       }
 
       const payload = (await response.json()) as MetadataUpdateResult;
-      setResult(payload.validation);
+      setResult(normalizeValidationResult(payload.validation));
     });
   }
 
@@ -405,7 +405,7 @@ export function ValidationWorkbench() {
       }
 
       const payload = (await response.json()) as ConversionResult;
-      setConversionResult(payload);
+      setConversionResult(normalizeConversionResult(payload));
     });
   }
 
@@ -461,7 +461,7 @@ export function ValidationWorkbench() {
       }
 
       const payload = (await response.json()) as BatchResult;
-      setBatchResult(payload);
+      setBatchResult(normalizeBatchResult(payload));
     });
   }
 
@@ -1142,4 +1142,46 @@ function getMessageTargetPath(message: ValidationResult["messages"][number]): st
 
   const embeddedPath = message.message.match(/(EPUB\/[A-Za-z0-9._/-]+\.(?:xhtml|html|opf|xml|ncx|css))/)?.[1];
   return embeddedPath ?? null;
+}
+
+function normalizeValidationResult(result: ValidationResult): ValidationResult {
+  return {
+    ...result,
+    artifacts: {
+      htmlUrl: toProxyUrl(result.artifacts.htmlUrl),
+      jsonUrl: toProxyUrl(result.artifacts.jsonUrl)
+    }
+  };
+}
+
+function normalizeConversionResult(result: ConversionResult): ConversionResult {
+  return {
+    ...result,
+    artifactUrl: toProxyUrl(result.artifactUrl)
+  };
+}
+
+function normalizeBatchResult(result: BatchResult): BatchResult {
+  return {
+    ...result,
+    csvUrl: toProxyUrl(result.csvUrl),
+    repairedZipUrl: toProxyUrl(result.repairedZipUrl)
+  };
+}
+
+function toProxyUrl(url: string): string {
+  if (url.startsWith("/api/worker/")) {
+    return url;
+  }
+
+  if (url.startsWith("/v1/")) {
+    return `${workerUrl}${url}`;
+  }
+
+  try {
+    const parsed = new URL(url);
+    return `${workerUrl}${parsed.pathname}${parsed.search}`;
+  } catch {
+    return url;
+  }
 }
