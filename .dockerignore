@@ -1,0 +1,11 @@
+.git
+.github
+.next
+.codex-tmp
+node_modules
+**/node_modules
+**/__pycache__
+**/.pytest_cache
+dist
+coverage
+*.tsbuildinfo

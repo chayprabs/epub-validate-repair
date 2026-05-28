@@ -6,6 +6,7 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "node scripts/prepare-next-types.mjs && tsc -p tsconfig.json",
+    "start": "next start -H 0.0.0.0 -p 3000",
     "test": "vitest run",
     "typecheck": "node scripts/prepare-next-types.mjs && tsc -p tsconfig.json"
   },

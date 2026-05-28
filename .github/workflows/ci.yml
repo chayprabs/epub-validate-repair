@@ -36,3 +36,11 @@ jobs:
       - run: pip install -r requirements.txt
       - run: python ../../tests/fixtures/generate_epub_fixtures.py
       - run: pytest -q
+
+  containers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose config
+      - run: docker build -f apps/worker/Dockerfile .
+      - run: docker build -f apps/web/Dockerfile .

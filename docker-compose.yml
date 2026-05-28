@@ -1,20 +1,25 @@
 services:
   web:
-    image: node:22-bookworm
-    working_dir: /workspace
-    command: sh -lc "corepack enable && pnpm install && pnpm --filter @epubdoctor/web dev --hostname 0.0.0.0"
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    environment:
+      NEXT_PUBLIC_WORKER_URL: http://worker:8000
     ports:
       - "3000:3000"
-    volumes:
-      - .:/workspace
     depends_on:
-      - worker
+      worker:
+        condition: service_healthy
 
   worker:
-    image: python:3.12-slim
-    working_dir: /workspace/apps/worker
-    command: sh -lc "pip install -r requirements.txt && uvicorn src.main:app --host 0.0.0.0 --port 8000"
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
     ports:
       - "8000:8000"
-    volumes:
-      - .:/workspace
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
