@@ -14,6 +14,8 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 - `pnpm test`
 - `pnpm build`
 - `docker run --rm -v "${PWD}:/workspace" -w /workspace/apps/worker python:3.12-slim bash -lc "pip install -r requirements.txt && python ../../tests/fixtures/generate_epub_fixtures.py && pytest -q"`
+- `python -m py_compile scripts/measure_qc.py`
+- `docker compose config`
 
 ### Product behaviors verified in tests
 
@@ -33,6 +35,8 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 - Confirm worker warm-up log line and `/health` runtime readiness output.
 - Measure cold and warm validation latency.
 - Capture worker image size and confirm it is `<= 1.5 GB`.
+- Current status: `VERIFY-DEFERRED` on this host because Docker Desktop lost the Linux engine pipe during image build attempts.
+- Current status: host Python is `3.14.3`, and a disposable worker venv failed to install `lxml`, `Pillow`, and `pydantic-core`, so non-Docker local worker startup is not a viable substitute on this machine.
 
 ### Performance
 
@@ -40,6 +44,11 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 - Measure p95 EPUB -> MOBI conversion.
 - Measure p95 MOBI -> EPUB conversion.
 - Prepared helper: `python scripts/measure_qc.py --worker-url http://127.0.0.1:8000 --iterations 5`
+- Local web Lighthouse on `http://127.0.0.1:3000` with `npx lighthouse ... --output-path=.codex-tmp/lighthouse-4.json`:
+  - Performance: `96`
+  - Accessibility: `100`
+  - Best Practices: `100`
+  - SEO: `100`
 
 ### UX and hosted checks
 

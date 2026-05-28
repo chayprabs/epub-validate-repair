@@ -1,4 +1,4 @@
-import { ValidationWorkbench } from "../components/validation-workbench";
+import { WorkbenchShell } from "../components/workbench-shell";
 
 const features = [
   "Fixture-backed validation API with downloadable HTML and JSON reports",
@@ -28,7 +28,7 @@ export default function HomePage() {
           ))}
         </ul>
       </section>
-      <ValidationWorkbench />
+      <WorkbenchShell />
     </main>
   );
 }

@@ -19,6 +19,43 @@ import type {
 } from "@epubdoctor/shared-types";
 
 const workerUrl = process.env.NEXT_PUBLIC_WORKER_URL ?? "http://localhost:8000";
+const defaultRecipes: RepairRecipe[] = [
+  {
+    id: "manifest-mismatch",
+    label: "Manifest mismatch",
+    description: "Add orphaned XHTML, image, font, CSS, NCX, and nav files back to the OPF manifest."
+  },
+  {
+    id: "spine-reference",
+    label: "Broken spine references",
+    description: "Remove spine entries that point to missing manifest items."
+  },
+  {
+    id: "toc-document",
+    label: "Missing TOC",
+    description: "Generate a nav.xhtml document and register it in the package manifest."
+  },
+  {
+    id: "invalid-xhtml",
+    label: "Invalid XHTML",
+    description: "Recover malformed XHTML files using lxml and rewrite them as well-formed XHTML."
+  },
+  {
+    id: "mimetype-entry",
+    label: "Bad mimetype entry",
+    description: "Rewrite the mimetype record so it is first in the archive and stored uncompressed."
+  },
+  {
+    id: "missing-cover",
+    label: "Missing cover",
+    description: "Inject a placeholder cover image and declare it in the OPF manifest."
+  },
+  {
+    id: "container-xml",
+    label: "Broken container.xml",
+    description: "Restore a valid META-INF/container.xml that points at the package document."
+  }
+];
 const conversionTargets: Array<{ label: string; value: ConversionTarget }> = [
   { label: "EPUB", value: "epub" },
   { label: "MOBI", value: "mobi" },
@@ -56,7 +93,7 @@ export function ValidationWorkbench() {
   const [batchFile, setBatchFile] = useState<File | null>(null);
   const [urlInput, setUrlInput] = useState("");
   const [result, setResult] = useState<ValidationResult | null>(null);
-  const [recipes, setRecipes] = useState<RepairRecipe[]>([]);
+  const [recipes] = useState<RepairRecipe[]>(defaultRecipes);
   const [selectedFixes, setSelectedFixes] = useState<RepairFixId[]>([]);
   const [entries, setEntries] = useState<UnpackEntry[]>([]);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
@@ -80,17 +117,6 @@ export function ValidationWorkbench() {
   const [isConvertPending, startConvertTransition] = useTransition();
   const [isDiffPending, startDiffTransition] = useTransition();
   const [isBatchPending, startBatchTransition] = useTransition();
-
-  useEffect(() => {
-    void (async () => {
-      const response = await fetch(`${workerUrl}/v1/repair/recipes`);
-      if (!response.ok) {
-        return;
-      }
-      const payload = (await response.json()) as { recipes: RepairRecipe[] };
-      setRecipes(payload.recipes);
-    })();
-  }, []);
 
   useEffect(() => {
     if (!result) {
@@ -397,16 +423,20 @@ export function ValidationWorkbench() {
       </div>
 
       <div className="upload-row">
-        <input
-          accept=".epub,application/epub+zip"
-          className="file-input"
-          onChange={(event) => {
-            setSelectedFile(event.target.files?.[0] ?? null);
-            setUrlInput("");
-            setResult(null);
-          }}
-          type="file"
-        />
+        <label className="field-stack">
+          <span className="sr-only">Choose an EPUB file to validate</span>
+          <input
+            accept=".epub,application/epub+zip"
+            aria-label="Choose an EPUB file to validate"
+            className="file-input"
+            onChange={(event) => {
+              setSelectedFile(event.target.files?.[0] ?? null);
+              setUrlInput("");
+              setResult(null);
+            }}
+            type="file"
+          />
+        </label>
         <button className="action" disabled={isPending} onClick={onSubmit} type="button">
           {isPending ? "Validating..." : "Validate EPUB"}
         </button>
@@ -439,30 +469,38 @@ export function ValidationWorkbench() {
       </div>
 
       <div className="upload-row compare-row">
-        <input
-          accept=".epub,application/epub+zip"
-          className="file-input"
-          onChange={(event) => {
-            setCompareFile(event.target.files?.[0] ?? null);
-            setDiffResult(null);
-          }}
-          type="file"
-        />
+        <label className="field-stack">
+          <span className="sr-only">Choose a second EPUB file for comparison</span>
+          <input
+            accept=".epub,application/epub+zip"
+            aria-label="Choose a second EPUB file for comparison"
+            className="file-input"
+            onChange={(event) => {
+              setCompareFile(event.target.files?.[0] ?? null);
+              setDiffResult(null);
+            }}
+            type="file"
+          />
+        </label>
         <button className="action secondary" disabled={isDiffPending} onClick={onDiff} type="button">
           {isDiffPending ? "Comparing..." : "Compare EPUBs"}
         </button>
       </div>
 
       <div className="upload-row compare-row">
-        <input
-          accept=".zip,application/zip"
-          className="file-input"
-          onChange={(event) => {
-            setBatchFile(event.target.files?.[0] ?? null);
-            setBatchResult(null);
-          }}
-          type="file"
-        />
+        <label className="field-stack">
+          <span className="sr-only">Choose a ZIP archive for batch processing</span>
+          <input
+            accept=".zip,application/zip"
+            aria-label="Choose a ZIP archive for batch processing"
+            className="file-input"
+            onChange={(event) => {
+              setBatchFile(event.target.files?.[0] ?? null);
+              setBatchResult(null);
+            }}
+            type="file"
+          />
+        </label>
         <button className="action secondary" disabled={isBatchPending} onClick={onBatch} type="button">
           {isBatchPending ? "Batch processing..." : "Run Pro batch"}
         </button>
