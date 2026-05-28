@@ -1,0 +1,103 @@
+:root {
+  color-scheme: dark;
+  --bg: #101822;
+  --panel: rgba(11, 24, 35, 0.88);
+  --border: rgba(165, 193, 214, 0.24);
+  --text: #f5f7fa;
+  --muted: #bfd1dc;
+  --accent: #f1b24a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(circle at top, rgba(241, 178, 74, 0.18), transparent 30%),
+    linear-gradient(180deg, #13202d 0%, #0a1119 100%);
+  color: var(--text);
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+a {
+  color: inherit;
+}
+
+.shell {
+  width: min(960px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 48px 0 80px;
+}
+
+.hero,
+.panel {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  backdrop-filter: blur(16px);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22);
+}
+
+.hero {
+  display: grid;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  font-size: 0.82rem;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  line-height: 0.95;
+}
+
+.lede {
+  margin: 16px 0 0;
+  color: var(--muted);
+  max-width: 46rem;
+  font-size: 1.05rem;
+}
+
+.badge {
+  width: fit-content;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(241, 178, 74, 0.14);
+  color: #ffd996;
+  font-size: 0.95rem;
+}
+
+.panel h2 {
+  margin-top: 0;
+}
+
+.panel ul {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--muted);
+}
+
+@media (max-width: 640px) {
+  .shell {
+    width: min(100vw - 24px, 960px);
+    padding-top: 24px;
+  }
+
+  .hero,
+  .panel {
+    border-radius: 20px;
+    padding: 20px;
+  }
+}

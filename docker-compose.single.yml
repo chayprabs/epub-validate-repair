@@ -1,0 +1,9 @@
+services:
+  app:
+    image: node:22-bookworm
+    working_dir: /workspace
+    command: sh -lc "corepack enable && pnpm install && pnpm --filter @epubdoctor/web dev --hostname 0.0.0.0"
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/workspace

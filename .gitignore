@@ -10,3 +10,11 @@ CODEX_GOLD_PROMPTS.md
 CODEX_GOAL_PROMPTS.md
 QUALIFYING_CRITERIA.md
 [0-3][0-9]_*.md
+
+node_modules/
+.next/
+dist/
+coverage/
+.venv/
+__pycache__/
+*.pyc
