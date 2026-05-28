@@ -40,6 +40,13 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 - Latest remote worker image budget check result:
   - `worker_size_bytes=1180238441`
   - Budget gate: `<= 1610612736` bytes (`1.5 GB`)
+- GitHub Actions run `26604210133` on commit `a0f2c73` revalidated the live worker service startup path.
+- `containers` live worker readiness smoke result:
+  - `worker health smoke: {"status": "ok", "runtime": {"javaReady": true, "calibreReady": true, "epubcheckReady": true, "message": "runtime warm-up: java=ok, calibre=ok, epubcheck=ok"}}`
+  - Container log evidence:
+    - `INFO:     Application startup complete.`
+    - `INFO:     172.17.0.1:33128 - "GET /health HTTP/1.1" 200 OK`
+- This now proves, in remote CI, that the built worker image can boot as a live HTTP service and report all three runtime dependencies ready through `/health`.
 
 ### Passing release-surface checks
 
@@ -82,10 +89,11 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 ### Runtime and hosting
 
 - Run `docker compose up --build -d` and capture health evidence.
-- Confirm worker warm-up log line and `/health` runtime readiness output.
+- `docker compose up --build -d` remains the only unproven part of the local runtime path; the live worker `/health` readiness output and warm-up log line are now qualified in remote CI.
 - Measure cold and warm validation latency.
 - Worker image size budget is now qualified in remote CI: latest passing result `1180238441` bytes, which is below the `1.5 GB` gate.
 - Built worker container smoke is now qualified in remote CI for Java + EPUBCheck + Calibre execution against the acceptance fixture path.
+- Built worker service readiness is now qualified in remote CI for live `/health` startup with `javaReady`, `calibreReady`, and `epubcheckReady` all `true`.
 - Current status for local container runtime remains `VERIFY-DEFERRED` on this host because Docker Desktop lost the Linux engine pipe during image build attempts.
 - Current status: host Python is `3.14.3`, and a disposable worker venv failed to install `lxml`, `Pillow`, and `pydantic-core`, so non-Docker local worker startup is not a viable substitute on this machine.
 
