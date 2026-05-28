@@ -2,6 +2,8 @@ import Link from "next/link";
 import { WorkbenchShell } from "../components/workbench-shell";
 import { seoPages } from "../lib/seo-pages";
 
+const repoUrl = "https://github.com/chayprabs/epub-validate-repair";
+
 const highlights = [
   "Validate EPUBs and export HTML or JSON reports.",
   "Repair common epubcheck failures with one checklist.",
@@ -17,6 +19,19 @@ const quickSteps = [
 export default function HomePage() {
   return (
     <main className="shell">
+      <nav className="topbar" aria-label="Primary">
+        <Link className="brand-mark" href="/">
+          <span className="brand-kicker">AGPL</span>
+          <strong>EpubDoctor</strong>
+        </Link>
+        <div className="topbar-links">
+          <a href="#workbench">Workbench</a>
+          <a href="#entry-points">Guides</a>
+          <a href={repoUrl} rel="noreferrer" target="_blank">
+            Source
+          </a>
+        </div>
+      </nav>
       <header className="hero">
         <div className="hero-copy">
           <p className="eyebrow">EpubDoctor</p>
@@ -77,6 +92,15 @@ export default function HomePage() {
       <div id="workbench">
         <WorkbenchShell />
       </div>
+      <footer className="site-footer">
+        <p>
+          EpubDoctor is open source under the AGPL-3.0 license. If you use the hosted app,
+          you should still have a direct path to the running source.
+        </p>
+        <a href={repoUrl} rel="noreferrer" target="_blank">
+          View source on GitHub
+        </a>
+      </footer>
     </main>
   );
 }
