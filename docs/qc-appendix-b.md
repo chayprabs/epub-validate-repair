@@ -29,6 +29,17 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
   - `worker_size_bytes=1146627595`
   - Budget gate: `<= 1610612736` bytes (`1.5 GB`)
 - Worker container build now uses `python:3.12-slim-bookworm`, which resolved the previous Debian package availability failure for `openjdk-17-jre-headless` on GitHub-hosted runners.
+- GitHub Actions run `26604037563` on commit `33a8055` revalidated the `containers` job after fixing the EPUBCheck bundle and fixture covers.
+- `containers` runtime smoke result inside the built worker image:
+  - `openjdk version "17.0.19" 2026-04-21`
+  - `ebook-convert (calibre 6.13.0)`
+  - `Messages: 0 fatals / 0 errors / 0 warnings / 0 infos`
+  - `epubcheck smoke: {"status": 0, "messages": 0, ...}`
+  - `calibre smoke: {'mobiBytes': 10494, 'roundtripEpubBytes': 4066}`
+  - `worker runtime smoke: complete`
+- Latest remote worker image budget check result:
+  - `worker_size_bytes=1180238441`
+  - Budget gate: `<= 1610612736` bytes (`1.5 GB`)
 
 ### Passing release-surface checks
 
@@ -73,7 +84,8 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 - Run `docker compose up --build -d` and capture health evidence.
 - Confirm worker warm-up log line and `/health` runtime readiness output.
 - Measure cold and warm validation latency.
-- Worker image size budget is now qualified in remote CI: `1146627595` bytes, which is below the `1.5 GB` gate.
+- Worker image size budget is now qualified in remote CI: latest passing result `1180238441` bytes, which is below the `1.5 GB` gate.
+- Built worker container smoke is now qualified in remote CI for Java + EPUBCheck + Calibre execution against the acceptance fixture path.
 - Current status for local container runtime remains `VERIFY-DEFERRED` on this host because Docker Desktop lost the Linux engine pipe during image build attempts.
 - Current status: host Python is `3.14.3`, and a disposable worker venv failed to install `lxml`, `Pillow`, and `pydantic-core`, so non-Docker local worker startup is not a viable substitute on this machine.
 
