@@ -4,6 +4,8 @@ import { useEffect, useState, useTransition } from "react";
 
 import type {
   CoverPreset,
+  ConversionResult,
+  ConversionTarget,
   EpubMetadata,
   MetadataUpdateResult,
   RepairFixId,
@@ -15,6 +17,13 @@ import type {
 } from "@epubdoctor/shared-types";
 
 const workerUrl = process.env.NEXT_PUBLIC_WORKER_URL ?? "http://localhost:8000";
+const conversionTargets: Array<{ label: string; value: ConversionTarget }> = [
+  { label: "EPUB", value: "epub" },
+  { label: "MOBI", value: "mobi" },
+  { label: "AZW3", value: "azw3" },
+  { label: "PDF", value: "pdf" },
+  { label: "HTML", value: "html" }
+];
 const emptyMetadataForm = {
   title: "",
   subtitle: "",
@@ -42,10 +51,17 @@ export function ValidationWorkbench() {
   const [metadataForm, setMetadataForm] = useState(emptyMetadataForm);
   const [coverPreset, setCoverPreset] = useState<CoverPreset>("kdp");
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [conversionTarget, setConversionTarget] = useState<ConversionTarget>("mobi");
+  const [tocDepth, setTocDepth] = useState("2");
+  const [pageSize, setPageSize] = useState("a4");
+  const [embedFonts, setEmbedFonts] = useState(false);
+  const [stripCss, setStripCss] = useState(false);
+  const [conversionResult, setConversionResult] = useState<ConversionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isRepairPending, startRepairTransition] = useTransition();
   const [isMetadataPending, startMetadataTransition] = useTransition();
+  const [isConvertPending, startConvertTransition] = useTransition();
 
   useEffect(() => {
     void (async () => {
@@ -64,6 +80,7 @@ export function ValidationWorkbench() {
       setEntries([]);
       setSelectedPath(null);
       setPreview(null);
+      setConversionResult(null);
       return;
     }
 
@@ -93,6 +110,7 @@ export function ValidationWorkbench() {
         .join("\n")
     });
     setCoverFile(null);
+    setConversionResult(null);
   }, [result]);
 
   useEffect(() => {
@@ -226,6 +244,41 @@ export function ValidationWorkbench() {
 
       const payload = (await response.json()) as MetadataUpdateResult;
       setResult(payload.validation);
+    });
+  }
+
+  function onConvert() {
+    if (!result) {
+      return;
+    }
+
+    setError(null);
+    startConvertTransition(async () => {
+      const response = await fetch(`${workerUrl}/v1/convert`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          jobId: result.jobId,
+          target: conversionTarget,
+          options: {
+            tocDepth: tocDepth ? Number(tocDepth) : null,
+            embedFonts,
+            stripCss,
+            pageSize: pageSize || null
+          }
+        })
+      });
+
+      if (!response.ok) {
+        setError("Conversion failed. Check that the worker can access ebook-convert.");
+        setConversionResult(null);
+        return;
+      }
+
+      const payload = (await response.json()) as ConversionResult;
+      setConversionResult(payload);
     });
   }
 
@@ -453,6 +506,62 @@ export function ValidationWorkbench() {
                   {coverFile ? <span className="message-meta">{coverFile.name}</span> : null}
                 </label>
               </div>
+            </section>
+
+            <section className="convert-panel">
+              <div className="message-topline">
+                <h3>Convert</h3>
+                <button
+                  className="action secondary"
+                  disabled={isConvertPending}
+                  onClick={onConvert}
+                  type="button"
+                >
+                  {isConvertPending ? "Converting..." : "Run conversion"}
+                </button>
+              </div>
+              <div className="convert-grid">
+                <label>
+                  <span>Target format</span>
+                  <select onChange={(event) => setConversionTarget(event.target.value as ConversionTarget)} value={conversionTarget}>
+                    {conversionTargets.map((target) => (
+                      <option key={target.value} value={target.value}>
+                        {target.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>TOC depth</span>
+                  <input onChange={(event) => setTocDepth(event.target.value)} type="number" value={tocDepth} />
+                </label>
+                <label>
+                  <span>Page size</span>
+                  <input onChange={(event) => setPageSize(event.target.value)} type="text" value={pageSize} />
+                </label>
+                <label className="toggle-row">
+                  <input checked={embedFonts} onChange={(event) => setEmbedFonts(event.target.checked)} type="checkbox" />
+                  <span>Embed fonts</span>
+                </label>
+                <label className="toggle-row">
+                  <input checked={stripCss} onChange={(event) => setStripCss(event.target.checked)} type="checkbox" />
+                  <span>Strip CSS</span>
+                </label>
+              </div>
+              {conversionResult ? (
+                <div className="convert-result">
+                  <div className="artifact-links">
+                    <a href={conversionResult.artifactUrl} rel="noreferrer" target="_blank">
+                      Download {conversionResult.target.toUpperCase()}
+                    </a>
+                  </div>
+                  <pre>{conversionResult.log}</pre>
+                </div>
+              ) : (
+                <p className="message-suggestion">
+                  Convert the current job to EPUB, MOBI, AZW3, PDF, or HTML with Calibre-compatible options.
+                </p>
+              )}
             </section>
 
             <div className="message-list">

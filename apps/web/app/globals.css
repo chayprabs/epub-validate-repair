@@ -209,6 +209,13 @@ a {
   background: rgba(5, 10, 16, 0.45);
 }
 
+.convert-panel {
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 16px;
+  background: rgba(5, 10, 16, 0.45);
+}
+
 .structure-panel {
   border: 1px solid var(--border);
   border-radius: 20px;
@@ -236,7 +243,10 @@ a {
 
 .metadata-grid input,
 .metadata-grid textarea,
-.metadata-grid select {
+.metadata-grid select,
+.convert-grid input,
+.convert-grid textarea,
+.convert-grid select {
   width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
@@ -249,6 +259,50 @@ a {
 .metadata-grid textarea {
   min-height: 92px;
   resize: vertical;
+}
+
+.convert-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.convert-grid label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.toggle-row {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.toggle-row input {
+  width: auto;
+}
+
+.convert-result {
+  margin-top: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.convert-result pre {
+  margin: 0;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .metadata-span-2 {
@@ -404,6 +458,10 @@ a {
   }
 
   .metadata-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .convert-grid {
     grid-template-columns: 1fr;
   }
 
