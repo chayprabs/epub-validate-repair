@@ -17,6 +17,8 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 - `python -m py_compile scripts/measure_qc.py`
 - `docker compose config`
 - `python -m pytest apps/worker/tests -q` -> `18 passed in 5.12s`
+- `python -m pytest apps/worker/tests/test_qualification_snapshots.py -q` -> `13 passed in 0.40s`
+- `python -m pytest apps/worker/tests -q` -> `31 passed in 2.38s`
 
 ### Passing remote CI checks
 
@@ -85,6 +87,8 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 - Batch ZIP processing returns CSV plus repaired ZIP output.
 - Two-EPUB diff returns structure, metadata, and chapter content changes.
 - Job storage now enforces TTL cleanup; expired job directories are purged before new work and expired inputs become unreadable in `apps/worker/tests/test_job_store.py`.
+- Validation report snapshots are now pinned for `broken-manifest.epub`, `kdp-ready.epub`, `invalid-xhtml.epub`, `legacy-epub2.epub`, `volume-1.epub`, and `volume-2.epub` in `tests/fixtures/snapshots/validation/`.
+- Every repair recipe now has a checked golden result in `tests/fixtures/goldens/repair/`, covering manifest mismatch, spine refs, TOC generation, invalid XHTML recovery, mimetype rewrite, missing cover injection, and container.xml repair.
 
 ## Remaining qualification work
 

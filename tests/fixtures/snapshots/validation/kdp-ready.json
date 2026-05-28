@@ -1,0 +1,76 @@
+{
+  "artifacts": {
+    "htmlUrl": "<html-url>",
+    "jsonUrl": "<json-url>"
+  },
+  "counts": {
+    "error": 0,
+    "info": 1,
+    "usage": 0,
+    "warning": 0
+  },
+  "epubVersion": "3.0",
+  "jobId": "<job-id>",
+  "manifest": [
+    {
+      "href": "nav.xhtml",
+      "id": "nav",
+      "mediaType": "application/xhtml+xml"
+    },
+    {
+      "href": "text/chapter1.xhtml",
+      "id": "chapter-1",
+      "mediaType": "application/xhtml+xml"
+    },
+    {
+      "href": "images/cover.jpg",
+      "id": "cover-image",
+      "mediaType": "image/jpeg"
+    }
+  ],
+  "messages": [
+    {
+      "column": null,
+      "file": "EPUB/package.opf",
+      "fixableBy": null,
+      "id": "EPUB_VERSION_DETECTED",
+      "line": null,
+      "message": "Detected EPUB 3.0.",
+      "severity": "info",
+      "suggestion": null
+    }
+  ],
+  "metadata": {
+    "contributors": [
+      {
+        "name": "Fixture Author",
+        "role": "aut"
+      }
+    ],
+    "custom": {},
+    "description": null,
+    "identifiers": [
+      {
+        "type": "isbn-13",
+        "value": "9781234567890"
+      }
+    ],
+    "language": "en",
+    "publishedAt": null,
+    "publisher": "EpubDoctor Fixtures",
+    "rights": "CC-BY",
+    "series": null,
+    "seriesIndex": null,
+    "subjects": [],
+    "subtitle": null,
+    "title": "KDP Ready"
+  },
+  "pass": true,
+  "spine": [
+    {
+      "href": "text/chapter1.xhtml",
+      "idref": "chapter-1"
+    }
+  ],
+  "toc": []
+}
