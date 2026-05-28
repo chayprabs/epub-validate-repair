@@ -50,6 +50,17 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
     - `INFO:     Application startup complete.`
     - `INFO:     172.17.0.1:33128 - "GET /health HTTP/1.1" 200 OK`
 - This now proves, in remote CI, that the built worker image can boot as a live HTTP service and report all three runtime dependencies ready through `/health`.
+- GitHub Actions run `26604957591` on commit `0bffdf8` revalidated the live worker service and added the timed performance smoke against the dedicated `performance-5mb.epub` fixture.
+- `containers` performance smoke result:
+  - Fixture size: `tests/fixtures/performance-5mb.epub` = `5246468` bytes
+  - `worker perf smoke: {"iterations": 5, "validate": {"samplesMs": [42, 40, 39, 39, 41], "meanMs": 40.2, "p95Ms": 42}, "epubToMobi": {"samplesMs": [620, 639, 614, 597, 591], "meanMs": 612.2, "p95Ms": 639}, "mobiToEpub": {"samplesMs": [531, 528, 529, 529, 531], "meanMs": 529.6, "p95Ms": 531}}`
+  - Section 5.13 gates satisfied in CI:
+    - validate p95 `42 ms` <= `10 s`
+    - EPUB -> MOBI p95 `639 ms` <= `20 s`
+    - MOBI -> EPUB p95 `531 ms` <= `25 s`
+- Latest remote worker image budget check result:
+  - `worker_size_bytes=1180239345`
+  - Budget gate: `<= 1610612736` bytes (`1.5 GB`)
 
 ### Passing release-surface checks
 
@@ -105,10 +116,8 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 
 ### Performance
 
-- Measure p95 validate for a 5 MB EPUB.
-- Measure p95 EPUB -> MOBI conversion.
-- Measure p95 MOBI -> EPUB conversion.
-- Prepared helper: `python scripts/measure_qc.py --worker-url http://127.0.0.1:8000 --iterations 5`
+- Remote CI now measures the Section 5.13 gates with `bash scripts/measure_worker_service.sh` against `tests/fixtures/performance-5mb.epub` for validation and `tests/fixtures/kdp-ready.epub` for conversion.
+- Standalone helper remains available for reruns: `python scripts/measure_qc.py --worker-url http://127.0.0.1:8000 --iterations 5 --validation-fixture performance-5mb.epub --conversion-fixture kdp-ready.epub`
 - Local web Lighthouse on `http://127.0.0.1:3000` with `npx lighthouse ... --output-path=.codex-tmp/lighthouse-4.json`:
   - Performance: `96`
   - Accessibility: `100`
