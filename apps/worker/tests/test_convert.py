@@ -82,3 +82,29 @@ def test_fake_round_trip_preserves_core_metadata() -> None:
     assert metadata["title"] == original["metadata"]["title"]
     assert metadata["contributors"] == original["metadata"]["contributors"]
     assert metadata["identifiers"] == original["metadata"]["identifiers"]
+
+
+def test_convert_endpoint_accepts_direct_mobi_upload() -> None:
+    os.environ["EPUBDOCTOR_EBOOK_CONVERT"] = str(FAKE_CONVERTER)
+    client = TestClient(app)
+    fixture_path = FIXTURE_DIR / "mobi-sample.mobi"
+
+    with fixture_path.open("rb") as handle:
+        response = client.post(
+            "/v1/convert",
+            data={
+                "target": "epub",
+                "tocDepth": "3",
+                "embedFonts": "true",
+                "stripCss": "false",
+                "pageSize": "a5",
+            },
+            files={"file": (fixture_path.name, handle, "application/x-mobipocket-ebook")},
+        )
+    os.environ.pop("EPUBDOCTOR_EBOOK_CONVERT", None)
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["target"] == "epub"
+    assert payload["artifactUrl"].endswith("/converted.epub")
+    assert "--epubdoctor-toc-depth 3" in payload["log"]

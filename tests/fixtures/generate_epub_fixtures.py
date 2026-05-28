@@ -237,6 +237,44 @@ BOOKS = {
             "EPUB/images/cover.jpg": b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00\xff\xd9",
         },
     },
+    "legacy-epub2.epub": {
+        "opf": """<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="bookid">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:title>Legacy EPUB2</dc:title>
+    <dc:creator>Fixture Author</dc:creator>
+    <dc:language>en</dc:language>
+    <dc:identifier id="bookid">9781234567890</dc:identifier>
+  </metadata>
+  <manifest>
+    <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml" />
+    <item id="chapter-1" href="text/chapter1.xhtml" media-type="application/xhtml+xml" />
+    <item id="cover-image" href="images/cover.jpg" media-type="image/jpeg" />
+  </manifest>
+  <spine toc="ncx">
+    <itemref idref="chapter-1" />
+  </spine>
+</package>
+""",
+        "files": {
+            "EPUB/toc.ncx": """<?xml version="1.0" encoding="utf-8"?>
+<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
+  <head />
+  <docTitle><text>Legacy EPUB2</text></docTitle>
+  <navMap>
+    <navPoint id="chapter-1" playOrder="1">
+      <navLabel><text>Chapter 1</text></navLabel>
+      <content src="text/chapter1.xhtml" />
+    </navPoint>
+  </navMap>
+</ncx>
+""",
+            "EPUB/text/chapter1.xhtml": """<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title>Chapter 1</title></head><body><h1>Legacy Chapter</h1></body></html>
+""",
+            "EPUB/images/cover.jpg": b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00\xff\xd9",
+        },
+    },
 }
 
 

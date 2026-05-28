@@ -64,6 +64,7 @@ export function ValidationWorkbench() {
   const [metadataForm, setMetadataForm] = useState(emptyMetadataForm);
   const [coverPreset, setCoverPreset] = useState<CoverPreset>("kdp");
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [conversionSourceFile, setConversionSourceFile] = useState<File | null>(null);
   const [conversionTarget, setConversionTarget] = useState<ConversionTarget>("mobi");
   const [tocDepth, setTocDepth] = useState("2");
   const [pageSize, setPageSize] = useState("a4");
@@ -287,31 +288,39 @@ export function ValidationWorkbench() {
   }
 
   function onConvert() {
-    if (!result) {
+    if (!result && !conversionSourceFile) {
+      setError("Validate an EPUB or choose a source file before converting.");
       return;
     }
 
     setError(null);
     startConvertTransition(async () => {
-      const response = await fetch(`${workerUrl}/v1/convert`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          jobId: result.jobId,
-          target: conversionTarget,
-          options: {
-            tocDepth: tocDepth ? Number(tocDepth) : null,
-            embedFonts,
-            stripCss,
-            pageSize: pageSize || null
-          }
-        })
-      });
+      const options = {
+        tocDepth: tocDepth ? Number(tocDepth) : null,
+        embedFonts,
+        stripCss,
+        pageSize: pageSize || null
+      };
+      const response = conversionSourceFile
+        ? await fetch(`${workerUrl}/v1/convert`, {
+            method: "POST",
+            body: buildConversionFormData(conversionSourceFile, conversionTarget, options)
+          })
+        : await fetch(`${workerUrl}/v1/convert`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              jobId: result?.jobId,
+              target: conversionTarget,
+              options
+            })
+          });
 
       if (!response.ok) {
-        setError("Conversion failed. Check that the worker can access ebook-convert.");
+        const detail = await readErrorDetail(response);
+        setError(detail ?? "Conversion failed. Check that the worker can access ebook-convert.");
         setConversionResult(null);
         return;
       }
@@ -677,6 +686,21 @@ export function ValidationWorkbench() {
               </div>
               <div className="convert-grid">
                 <label>
+                  <span>Source file</span>
+                  <input
+                    accept=".epub,.mobi,.azw3,.html,.htm,.pdf"
+                    onChange={(event) => setConversionSourceFile(event.target.files?.[0] ?? null)}
+                    type="file"
+                  />
+                  <span className="message-meta">
+                    {conversionSourceFile
+                      ? `Using ${conversionSourceFile.name}`
+                      : result
+                        ? `Using validated job ${result.jobId}`
+                        : "Upload MOBI, AZW3, HTML, PDF, or EPUB for direct conversion."}
+                  </span>
+                </label>
+                <label>
                   <span>Target format</span>
                   <select onChange={(event) => setConversionTarget(event.target.value as ConversionTarget)} value={conversionTarget}>
                     {conversionTargets.map((target) => (
@@ -936,4 +960,23 @@ async function readErrorDetail(response: Response): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+function buildConversionFormData(
+  file: File,
+  target: ConversionTarget,
+  options: { tocDepth: number | null; embedFonts: boolean; stripCss: boolean; pageSize: string | null }
+): FormData {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("target", target);
+  if (options.tocDepth !== null) {
+    formData.append("tocDepth", String(options.tocDepth));
+  }
+  formData.append("embedFonts", String(options.embedFonts));
+  formData.append("stripCss", String(options.stripCss));
+  if (options.pageSize) {
+    formData.append("pageSize", options.pageSize);
+  }
+  return formData;
 }
