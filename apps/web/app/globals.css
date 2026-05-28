@@ -202,6 +202,13 @@ a {
   background: rgba(5, 10, 16, 0.45);
 }
 
+.structure-panel {
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 16px;
+  background: rgba(5, 10, 16, 0.45);
+}
+
 .repair-panel h3 {
   margin: 0;
 }
@@ -240,6 +247,67 @@ a {
   border-radius: 18px;
   padding: 16px;
   background: rgba(5, 10, 16, 0.45);
+}
+
+.structure-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.file-list {
+  display: grid;
+  gap: 8px;
+  max-height: 380px;
+  overflow: auto;
+}
+
+.file-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+}
+
+.file-row.active {
+  border-color: rgba(241, 178, 74, 0.3);
+  background: rgba(241, 178, 74, 0.06);
+}
+
+.preview-pane {
+  min-height: 280px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.preview-pane pre {
+  margin: 0;
+  padding: 16px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--muted);
+}
+
+.preview-frame {
+  width: 100%;
+  min-height: 320px;
+  border: 0;
+  background: white;
+}
+
+.preview-image {
+  display: block;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 16px;
 }
 
 .artifact-links {
@@ -287,5 +355,9 @@ a {
   .upload-row,
   .result-grid {
     display: grid;
+  }
+
+  .structure-grid {
+    grid-template-columns: 1fr;
   }
 }

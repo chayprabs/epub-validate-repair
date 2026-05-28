@@ -81,6 +81,19 @@ class RepairResult(BaseModel):
     validation: "ValidationResult"
 
 
+class UnpackEntry(BaseModel):
+    path: str
+    kind: Literal["xhtml", "css", "image", "xml", "opf", "ncx", "font", "text", "binary"]
+    size: int
+
+
+class UnpackPreview(BaseModel):
+    path: str
+    kind: Literal["xhtml", "css", "image", "xml", "opf", "ncx", "font", "text", "binary"]
+    text: str | None = None
+    dataUrl: str | None = None
+
+
 class ValidationResult(BaseModel):
     jobId: str
     epubVersion: Literal["2.0", "3.0", "3.1", "3.2", "3.3"] = "3.0"

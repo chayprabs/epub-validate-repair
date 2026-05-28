@@ -6,6 +6,8 @@ import type {
   RepairFixId,
   RepairRecipe,
   RepairResult,
+  UnpackEntry,
+  UnpackPreview,
   ValidationResult
 } from "@epubdoctor/shared-types";
 
@@ -16,6 +18,9 @@ export function ValidationWorkbench() {
   const [result, setResult] = useState<ValidationResult | null>(null);
   const [recipes, setRecipes] = useState<RepairRecipe[]>([]);
   const [selectedFixes, setSelectedFixes] = useState<RepairFixId[]>([]);
+  const [entries, setEntries] = useState<UnpackEntry[]>([]);
+  const [selectedPath, setSelectedPath] = useState<string | null>(null);
+  const [preview, setPreview] = useState<UnpackPreview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isRepairPending, startRepairTransition] = useTransition();
@@ -34,6 +39,9 @@ export function ValidationWorkbench() {
   useEffect(() => {
     if (!result) {
       setSelectedFixes([]);
+      setEntries([]);
+      setSelectedPath(null);
+      setPreview(null);
       return;
     }
 
@@ -46,6 +54,41 @@ export function ValidationWorkbench() {
     );
     setSelectedFixes(suggested);
   }, [result]);
+
+  useEffect(() => {
+    if (!result) {
+      return;
+    }
+
+    void (async () => {
+      const response = await fetch(`${workerUrl}/v1/unpack/${result.jobId}`);
+      if (!response.ok) {
+        return;
+      }
+      const payload = (await response.json()) as { entries: UnpackEntry[] };
+      setEntries(payload.entries);
+      const nextPath = payload.entries.find((entry) => entry.kind === "xhtml")?.path ?? payload.entries[0]?.path ?? null;
+      setSelectedPath(nextPath);
+    })();
+  }, [result]);
+
+  useEffect(() => {
+    if (!result || !selectedPath) {
+      setPreview(null);
+      return;
+    }
+
+    void (async () => {
+      const response = await fetch(
+        `${workerUrl}/v1/unpack/${result.jobId}/preview?path=${encodeURIComponent(selectedPath)}`
+      );
+      if (!response.ok) {
+        return;
+      }
+      const payload = (await response.json()) as UnpackPreview;
+      setPreview(payload);
+    })();
+  }, [result, selectedPath]);
 
   function onSubmit() {
     if (!selectedFile) {
@@ -211,6 +254,46 @@ export function ValidationWorkbench() {
                 </article>
               ))}
             </div>
+
+            {entries.length > 0 ? (
+              <section className="structure-panel">
+                <div className="message-topline">
+                  <h3>Structure preview</h3>
+                  <span className="message-meta">{entries.length} files</span>
+                </div>
+                <div className="structure-grid">
+                  <div className="file-list">
+                    {entries.map((entry) => (
+                      <button
+                        className={`file-row ${selectedPath === entry.path ? "active" : ""}`}
+                        key={entry.path}
+                        onClick={() => setSelectedPath(entry.path)}
+                        type="button"
+                      >
+                        <span>{entry.path}</span>
+                        <span className="message-meta">{entry.kind}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="preview-pane">
+                    {preview?.kind === "image" && preview.dataUrl ? (
+                      <img alt={preview.path} className="preview-image" src={preview.dataUrl} />
+                    ) : null}
+                    {preview?.kind === "xhtml" && preview.text ? (
+                      <iframe
+                        className="preview-frame"
+                        sandbox=""
+                        srcDoc={preview.text}
+                        title={preview.path}
+                      />
+                    ) : null}
+                    {preview && preview.kind !== "image" && preview.kind !== "xhtml" ? (
+                      <pre>{preview.text}</pre>
+                    ) : null}
+                  </div>
+                </div>
+              </section>
+            ) : null}
           </div>
         </div>
       ) : null}

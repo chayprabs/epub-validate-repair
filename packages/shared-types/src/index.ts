@@ -81,3 +81,27 @@ export interface RepairResult {
   appliedFixes: RepairFixId[];
   validation: ValidationResult;
 }
+
+export type UnpackKind =
+  | "xhtml"
+  | "css"
+  | "image"
+  | "xml"
+  | "opf"
+  | "ncx"
+  | "font"
+  | "text"
+  | "binary";
+
+export interface UnpackEntry {
+  path: string;
+  kind: UnpackKind;
+  size: number;
+}
+
+export interface UnpackPreview {
+  path: string;
+  kind: UnpackKind;
+  text?: string | null;
+  dataUrl?: string | null;
+}
