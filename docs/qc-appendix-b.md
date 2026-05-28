@@ -1,7 +1,7 @@
 # QC Appendix B - EpubDoctor
 
 Repo: `https://github.com/chayprabs/epub-validate-repair`  
-Branch: `cursor/epub-doctor-build`
+Branch: `main`
 
 This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECKLIST.md` Section 5. It should be updated with exact commands and evidence as checks are completed.
 
@@ -22,6 +22,21 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 
 ### Passing remote CI checks
 
+- GitHub Actions run `26606506881` on commit `254dc07` completed successfully for `web`, `worker`, and `containers` on `main`.
+- `web` job result:
+  - `pnpm lint`
+  - `pnpm typecheck`
+  - `pnpm test`
+  - `pnpm build`
+- `worker` job result: `18 passed`
+- `containers` job revalidated:
+  - `docker compose config`
+  - worker container build
+  - web container build
+  - live worker `/health` smoke
+  - performance smoke
+  - real-tool worker container smoke
+  - image budget gate
 - GitHub Actions run `26602899351` on commit `1cc08f2` completed successfully for `web`, `worker`, and `containers`.
 - `worker` job used hosted Python `3.12.13`.
 - `worker` job result: `16 passed in 0.77s`.
@@ -61,6 +76,12 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 - Latest remote worker image budget check result:
   - `worker_size_bytes=1180239345`
   - Budget gate: `<= 1610612736` bytes (`1.5 GB`)
+- GitHub Actions run `26606511137` on commit `254dc07` completed successfully for the `release` workflow.
+- `release` job result:
+  - authenticated to `ghcr.io`
+  - generated metadata for `ghcr.io/chayprabs/epubdoctor-worker`
+  - generated metadata for `ghcr.io/chayprabs/epubdoctor-web`
+  - pushed both images successfully with `docker/build-push-action@v6`
 
 ### Passing release-surface checks
 
@@ -74,6 +95,7 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
   - `/kdp-epub-check`
 - The app also emits `robots.txt` and `sitemap.xml`.
 - GitHub repository description matches the PRD one-liner.
+- GitHub now recognizes the repository license as `AGPL-3.0`.
 - GitHub repository topics now include 12 required discovery tags:
   - `azw3`
   - `calibre`
@@ -100,18 +122,25 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 - Job storage now enforces TTL cleanup; expired job directories are purged before new work and expired inputs become unreadable in `apps/worker/tests/test_job_store.py`.
 - Validation report snapshots are now pinned for `broken-manifest.epub`, `kdp-ready.epub`, `invalid-xhtml.epub`, `legacy-epub2.epub`, `volume-1.epub`, and `volume-2.epub` in `tests/fixtures/snapshots/validation/`.
 - Every repair recipe now has a checked golden result in `tests/fixtures/goldens/repair/`, covering manifest mismatch, spine refs, TOC generation, invalid XHTML recovery, mimetype rewrite, missing cover injection, and container.xml repair.
+- The production web now proxies worker requests through `apps/web/app/api/worker/[...path]/route.ts`, which keeps validation, artifact downloads, and previews on the same origin and makes a public-web/private-worker deployment possible.
+- Local production-mode smoke verified the proxy path:
+  - web `http://127.0.0.1:3101`
+  - worker `http://127.0.0.1:8100`
+  - `broken-manifest.epub` validation completed successfully through `/api/worker/v1/validate`
+  - report links were rewritten to `/api/worker/v1/artifacts/...`
+  - "Open in viewer" switched into the Structure tab correctly
 
 ## Remaining qualification work
 
 ### Runtime and hosting
 
-- Run `docker compose up --build -d` and capture health evidence.
+- Run `docker compose up --build -d` and capture health evidence on a healthy local Docker host.
 - `docker compose up --build -d` remains the only unproven part of the local runtime path; the live worker `/health` readiness output and warm-up log line are now qualified in remote CI.
-- Measure cold and warm validation latency.
+- A hosted deployment is still missing. The repo now includes `render.yaml` for a Render blueprint, but there is not yet a live public web URL or HTTPS certificate evidence for Section 5.14 / 5.16.
 - Worker image size budget is now qualified in remote CI: latest passing result `1180238441` bytes, which is below the `1.5 GB` gate.
 - Built worker container smoke is now qualified in remote CI for Java + EPUBCheck + Calibre execution against the acceptance fixture path.
 - Built worker service readiness is now qualified in remote CI for live `/health` startup with `javaReady`, `calibreReady`, and `epubcheckReady` all `true`.
-- Current status for local container runtime remains `VERIFY-DEFERRED` on this host because Docker Desktop lost the Linux engine pipe during image build attempts.
+- Current status for local container runtime remains `VERIFY-DEFERRED` on this host because Docker Desktop intermittently loses the Linux engine pipe during direct local image execution attempts.
 - Current status: host Python is `3.14.3`, and a disposable worker venv failed to install `lxml`, `Pillow`, and `pydantic-core`, so non-Docker local worker startup is not a viable substitute on this machine.
 
 ### Performance
@@ -128,10 +157,11 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
 
 - Run Lighthouse against the local or hosted app and record all four scores.
 - Verify mobile usability with screenshots.
-- Verify hosted URLs and SEO sub-routes.
+- Verify a hosted URL and the corresponding HTTPS certificate.
+- Verify hosted SEO sub-routes against the public deployment.
 
 ### Documentation
 
-- Add final screenshot evidence to the README or docs set.
 - README now documents the `EPUBDOCTOR_RETENTION_TTL_SECONDS` override for self-hosted artifact retention.
-- Link the final release PR and qualification SHA once Section 5 is fully green.
+- README now documents the Render blueprint path for a public web service plus a private worker service.
+- Link the final qualification SHA once Section 5 is fully green.
