@@ -30,6 +30,32 @@ This report is the running qualification ledger for `RELEASE_QUALIFICATION_CHECK
   - Budget gate: `<= 1610612736` bytes (`1.5 GB`)
 - Worker container build now uses `python:3.12-slim-bookworm`, which resolved the previous Debian package availability failure for `openjdk-17-jre-headless` on GitHub-hosted runners.
 
+### Passing release-surface checks
+
+- README now includes a real homepage screenshot at `docs/screenshots/homepage.png`.
+- The web build now prerenders the required SEO routes:
+  - `/epub-validator-online`
+  - `/epub-to-mobi`
+  - `/mobi-to-epub`
+  - `/epub-metadata-editor`
+  - `/epub-cover-replace`
+  - `/kdp-epub-check`
+- The app also emits `robots.txt` and `sitemap.xml`.
+- GitHub repository description matches the PRD one-liner.
+- GitHub repository topics now include 12 required discovery tags:
+  - `azw3`
+  - `calibre`
+  - `ebook`
+  - `ebook-converter`
+  - `ebook-metadata`
+  - `epub`
+  - `epub-validator`
+  - `epubcheck`
+  - `kindle`
+  - `mobi`
+  - `online-tool`
+  - `epub-repair`
+
 ### Product behaviors verified in tests
 
 - `broken-manifest.epub` validates with 4 errors and those errors map to repair recipes.

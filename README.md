@@ -2,6 +2,8 @@
 
 EpubDoctor validates, repairs, converts, diffs, and edits metadata for EPUB, MOBI, and AZW3 ebooks with a server-side worker powered by FastAPI, Calibre, and EPUB tooling. It is built for the self-publishing workflow: upload a broken book, inspect the report, apply repairs, preview the package, edit metadata, convert formats, compare volumes, and export repaired artifacts.
 
+![EpubDoctor homepage screenshot](docs/screenshots/homepage.png)
+
 ## Current scope
 
 - Validate EPUB files and export HTML and JSON reports.
