@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 
 const allowedSamples = new Set([
   "broken-manifest.epub",
+  "drm-protected.epub",
   "kdp-ready.epub",
   "volume-1.epub",
   "volume-2.epub",

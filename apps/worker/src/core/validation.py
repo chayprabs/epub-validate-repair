@@ -19,11 +19,19 @@ from src.models import (
 )
 
 CONTAINER_PATH = "META-INF/container.xml"
+DRM_MARKERS = {
+    "META-INF/encryption.xml",
+    "META-INF/rights.xml",
+}
 NAMESPACES = {
     "container": "urn:oasis:names:tc:opendocument:xmlns:container",
     "opf": "http://www.idpf.org/2007/opf",
     "dc": "http://purl.org/dc/elements/1.1/",
 }
+
+
+class DRMProtectedError(RuntimeError):
+    pass
 
 
 def validate_epub(epub_path: str, job_id: str, base_artifact_url: str) -> ValidationResult:
@@ -37,6 +45,10 @@ def validate_epub(epub_path: str, job_id: str, base_artifact_url: str) -> Valida
     with zipfile.ZipFile(epub_path, "r") as archive:
         namelist = archive.namelist()
         file_infos = {info.filename: info for info in archive.infolist()}
+        if detect_drm_markers(namelist):
+            raise DRMProtectedError(
+                "This ebook appears to be DRM-protected. EpubDoctor only works with DRM-free files."
+            )
 
         if not namelist:
             raise ValueError("Archive is empty.")
@@ -170,16 +182,12 @@ def validate_epub(epub_path: str, job_id: str, base_artifact_url: str) -> Valida
                 file=package_path,
             )
         )
-        messages.append(
-            EpubcheckMessage(
-                id="DRM_NOT_DETECTED",
-                severity="usage",
-                message="No DRM markers were detected in the uploaded archive.",
-                file=package_path,
-            )
-        )
-
     return _finalize_result(job_id, version, messages, metadata, manifest, spine, toc, base_artifact_url)
+
+
+def detect_drm_markers(namelist: list[str]) -> bool:
+    archive_entries = set(namelist)
+    return any(marker in archive_entries for marker in DRM_MARKERS)
 
 
 def _read_xml(

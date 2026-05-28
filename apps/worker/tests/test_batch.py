@@ -16,6 +16,7 @@ def test_batch_endpoint_returns_csv_and_repaired_zip() -> None:
         archive.writestr("notes.txt", "ignore me")
         archive.writestr("broken-manifest.epub", (FIXTURE_DIR / "broken-manifest.epub").read_bytes())
         archive.writestr("kdp-ready.epub", (FIXTURE_DIR / "kdp-ready.epub").read_bytes())
+        archive.writestr("drm-protected.epub", (FIXTURE_DIR / "drm-protected.epub").read_bytes())
 
     response = client.post(
         "/v1/batch",
@@ -26,7 +27,7 @@ def test_batch_endpoint_returns_csv_and_repaired_zip() -> None:
     payload = response.json()
     assert payload["csvUrl"].endswith("/batch-report.csv")
     assert payload["repairedZipUrl"].endswith("/batch-repaired.zip")
-    assert len(payload["items"]) == 3
+    assert len(payload["items"]) == 4
 
     broken = next(item for item in payload["items"] if item["filename"] == "broken-manifest.epub")
     assert broken["status"] == "repaired"
@@ -35,6 +36,10 @@ def test_batch_endpoint_returns_csv_and_repaired_zip() -> None:
 
     clean = next(item for item in payload["items"] if item["filename"] == "kdp-ready.epub")
     assert clean["status"] == "passed"
+
+    drm = next(item for item in payload["items"] if item["filename"] == "drm-protected.epub")
+    assert drm["status"] == "failed"
+    assert drm["originalErrors"] == 0
 
     unsupported = next(item for item in payload["items"] if item["filename"] == "notes.txt")
     assert unsupported["status"] == "unsupported"

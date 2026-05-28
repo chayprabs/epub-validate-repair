@@ -67,6 +67,20 @@ def test_invalid_xhtml_is_marked_fixable() -> None:
     assert xhtml_messages[0]["fixableBy"] == "invalid-xhtml"
 
 
+def test_drm_protected_fixture_is_refused_with_friendly_message() -> None:
+    client = TestClient(app)
+    fixture_path = FIXTURE_DIR / "drm-protected.epub"
+
+    with fixture_path.open("rb") as handle:
+        response = client.post(
+            "/v1/validate",
+            files={"file": (fixture_path.name, handle, "application/epub+zip")},
+        )
+
+    assert response.status_code == 400
+    assert "DRM-free files" in response.json()["detail"]
+
+
 def test_validate_url_downloads_remote_epub(monkeypatch) -> None:
     client = TestClient(app)
     fixture_path = FIXTURE_DIR / "kdp-ready.epub"

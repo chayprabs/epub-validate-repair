@@ -7,7 +7,7 @@ import zipfile
 from pathlib import Path
 
 from src.core.repair import repair_epub
-from src.core.validation import validate_epub
+from src.core.validation import DRMProtectedError, validate_epub
 from src.models import BatchItemResult, BatchResult, RepairFixId
 from src.storage.jobs import JobStore
 
@@ -58,7 +58,16 @@ def _process_epub_entry(filename: str, payload: bytes) -> tuple[BatchItemResult,
     with tempfile.TemporaryDirectory(prefix="epubdoctor-batch-") as temp_dir:
         source_path = Path(temp_dir) / "source.epub"
         source_path.write_bytes(payload)
-        validation = validate_epub(str(source_path), "batch-item", "http://batch.local/artifacts")
+        try:
+            validation = validate_epub(str(source_path), "batch-item", "http://batch.local/artifacts")
+        except DRMProtectedError:
+            return BatchItemResult(
+                filename=filename,
+                status="failed",
+                originalErrors=0,
+                repairedErrors=0,
+                appliedFixes=[],
+            ), None
         fix_ids = _collect_fix_ids(validation.messages)
 
         if validation.pass_:

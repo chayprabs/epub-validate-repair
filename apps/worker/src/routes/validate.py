@@ -5,7 +5,7 @@ from urllib.request import Request as UrlRequest, urlopen
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 
-from src.core.validation import validate_epub
+from src.core.validation import DRMProtectedError, validate_epub
 from src.storage.jobs import JobStore
 
 router = APIRouter(prefix="/v1", tags=["validation"])
@@ -32,7 +32,10 @@ async def validate_file(
 
     job_id, epub_path = job_store.create_job(filename, payload)
     artifacts_base_url = str(request.base_url).rstrip("/") + "/v1/artifacts"
-    result = validate_epub(str(epub_path), job_id, artifacts_base_url)
+    try:
+        result = validate_epub(str(epub_path), job_id, artifacts_base_url)
+    except DRMProtectedError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     job_store.write_json_artifact(job_id, "report.json", result.model_dump(by_alias=True))
     job_store.write_text_artifact(job_id, "report.html", _render_html_report(result.model_dump(by_alias=True)))

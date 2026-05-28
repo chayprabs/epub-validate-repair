@@ -28,6 +28,7 @@ const conversionTargets: Array<{ label: string; value: ConversionTarget }> = [
 ];
 const sampleFiles = [
   "broken-manifest.epub",
+  "drm-protected.epub",
   "kdp-ready.epub",
   "invalid-xhtml.epub",
   "volume-1.epub",
@@ -188,7 +189,8 @@ export function ValidationWorkbench() {
 
       if (!response.ok) {
         setResult(null);
-        setError("Validation failed. Check that the worker is running and reachable.");
+        const detail = await readErrorDetail(response);
+        setError(detail ?? "Validation failed. Check that the worker is running and reachable.");
         return;
       }
 
@@ -365,7 +367,8 @@ export function ValidationWorkbench() {
 
       if (!response.ok) {
         setBatchResult(null);
-        setError("Batch mode failed. The worker could not process the ZIP archive.");
+        const detail = await readErrorDetail(response);
+        setError(detail ?? "Batch mode failed. The worker could not process the ZIP archive.");
         return;
       }
 
@@ -924,4 +927,13 @@ async function fileToDataUrl(file: File): Promise<string> {
     reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(file);
   });
+}
+
+async function readErrorDetail(response: Response): Promise<string | null> {
+  try {
+    const payload = (await response.json()) as { detail?: string };
+    return payload.detail ?? null;
+  } catch {
+    return null;
+  }
 }
