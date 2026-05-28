@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from pathlib import Path
-from zipfile import ZIP_DEFLATED, ZIP_STORED, ZipFile
+from zipfile import ZIP_DEFLATED, ZIP_STORED, ZipFile, ZipInfo
 
 
 ROOT = Path(__file__).resolve().parent
+FIXTURE_TIMESTAMP = (2026, 1, 1, 0, 0, 0)
 BOOKS = {
     "broken-manifest.epub": {
         "opf": """<?xml version="1.0" encoding="utf-8"?>
@@ -132,6 +133,12 @@ BOOKS = {
 }
 
 
+def write_entry(archive: ZipFile, filename: str, contents: bytes | str, compress_type: int) -> None:
+    entry = ZipInfo(filename, date_time=FIXTURE_TIMESTAMP)
+    entry.compress_type = compress_type
+    archive.writestr(entry, contents)
+
+
 def write_epub(target: Path, book: dict) -> None:
     with ZipFile(target, "w") as archive:
         mimetype_bytes = book.get("mimetype", b"application/epub+zip")
@@ -146,13 +153,13 @@ def write_epub(target: Path, book: dict) -> None:
 """,
         )
         if book.get("mimetype_first", True):
-            archive.writestr("mimetype", mimetype_bytes, compress_type=ZIP_STORED)
-        archive.writestr("EPUB/package.opf", book["opf"], compress_type=ZIP_DEFLATED)
-        archive.writestr("META-INF/container.xml", container_xml, compress_type=ZIP_DEFLATED)
+            write_entry(archive, "mimetype", mimetype_bytes, ZIP_STORED)
+        write_entry(archive, "EPUB/package.opf", book["opf"], ZIP_DEFLATED)
+        write_entry(archive, "META-INF/container.xml", container_xml, ZIP_DEFLATED)
         if not book.get("mimetype_first", True):
-            archive.writestr("mimetype", mimetype_bytes, compress_type=ZIP_DEFLATED)
+            write_entry(archive, "mimetype", mimetype_bytes, ZIP_DEFLATED)
         for filename, contents in book["files"].items():
-            archive.writestr(filename, contents, compress_type=ZIP_DEFLATED)
+            write_entry(archive, filename, contents, ZIP_DEFLATED)
 
 
 def main() -> None:

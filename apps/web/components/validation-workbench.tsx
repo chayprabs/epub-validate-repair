@@ -1,16 +1,51 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
-import type { ValidationResult } from "@epubdoctor/shared-types";
+import type {
+  RepairFixId,
+  RepairRecipe,
+  RepairResult,
+  ValidationResult
+} from "@epubdoctor/shared-types";
 
 const workerUrl = process.env.NEXT_PUBLIC_WORKER_URL ?? "http://localhost:8000";
 
 export function ValidationWorkbench() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [result, setResult] = useState<ValidationResult | null>(null);
+  const [recipes, setRecipes] = useState<RepairRecipe[]>([]);
+  const [selectedFixes, setSelectedFixes] = useState<RepairFixId[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isRepairPending, startRepairTransition] = useTransition();
+
+  useEffect(() => {
+    void (async () => {
+      const response = await fetch(`${workerUrl}/v1/repair/recipes`);
+      if (!response.ok) {
+        return;
+      }
+      const payload = (await response.json()) as { recipes: RepairRecipe[] };
+      setRecipes(payload.recipes);
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (!result) {
+      setSelectedFixes([]);
+      return;
+    }
+
+    const suggested = Array.from(
+      new Set(
+        result.messages
+          .map((message) => message.fixableBy)
+          .filter((value): value is RepairFixId => Boolean(value))
+      )
+    );
+    setSelectedFixes(suggested);
+  }, [result]);
 
   function onSubmit() {
     if (!selectedFile) {
@@ -39,6 +74,41 @@ export function ValidationWorkbench() {
     });
   }
 
+  function toggleFix(fixId: RepairFixId) {
+    setSelectedFixes((current) =>
+      current.includes(fixId) ? current.filter((value) => value !== fixId) : [...current, fixId]
+    );
+  }
+
+  function onRepair() {
+    if (!result || selectedFixes.length === 0) {
+      setError("Select at least one repair recipe before applying fixes.");
+      return;
+    }
+
+    setError(null);
+    startRepairTransition(async () => {
+      const response = await fetch(`${workerUrl}/v1/repair`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          jobId: result.jobId,
+          fixes: selectedFixes
+        })
+      });
+
+      if (!response.ok) {
+        setError("Repair failed. The worker could not produce a repaired EPUB.");
+        return;
+      }
+
+      const payload = (await response.json()) as RepairResult;
+      setResult(payload.validation);
+    });
+  }
+
   return (
     <section className="panel workbench">
       <div className="workbench-header">
@@ -64,6 +134,16 @@ export function ValidationWorkbench() {
         </button>
       </div>
 
+      {recipes.length > 0 ? (
+        <div className="recipe-strip">
+          {recipes.map((recipe) => (
+            <span className="recipe-pill" key={recipe.id}>
+              {recipe.label}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
       {selectedFile ? <p className="status-line">Selected: {selectedFile.name}</p> : null}
       {error ? <p className="error-line">{error}</p> : null}
 
@@ -85,18 +165,52 @@ export function ValidationWorkbench() {
             </div>
           </div>
 
-          <div className="message-list">
-            {result.messages.map((message) => (
-              <article className={`message-card severity-${message.severity}`} key={`${message.id}-${message.file}`}>
-                <div className="message-topline">
-                  <strong>{message.id}</strong>
-                  <span>{message.severity}</span>
-                </div>
-                <p>{message.message}</p>
-                <p className="message-meta">{message.file}</p>
-                {message.suggestion ? <p className="message-suggestion">{message.suggestion}</p> : null}
-              </article>
-            ))}
+          <div className="result-main">
+            <section className="repair-panel">
+              <div className="message-topline">
+                <h3>Repair checklist</h3>
+                <button
+                  className="action secondary"
+                  disabled={isRepairPending || selectedFixes.length === 0 || result.pass}
+                  onClick={onRepair}
+                  type="button"
+                >
+                  {isRepairPending ? "Repairing..." : "Apply selected"}
+                </button>
+              </div>
+              <div className="repair-list">
+                {recipes.map((recipe) => {
+                  const suggested = result.messages.some((message) => message.fixableBy === recipe.id);
+                  return (
+                    <label className={`repair-item ${suggested ? "suggested" : ""}`} key={recipe.id}>
+                      <input
+                        checked={selectedFixes.includes(recipe.id)}
+                        onChange={() => toggleFix(recipe.id)}
+                        type="checkbox"
+                      />
+                      <span>
+                        <strong>{recipe.label}</strong>
+                        <span className="message-suggestion">{recipe.description}</span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </section>
+
+            <div className="message-list">
+              {result.messages.map((message) => (
+                <article className={`message-card severity-${message.severity}`} key={`${message.id}-${message.file}`}>
+                  <div className="message-topline">
+                    <strong>{message.id}</strong>
+                    <span>{message.severity}</span>
+                  </div>
+                  <p>{message.message}</p>
+                  <p className="message-meta">{message.file}</p>
+                  {message.suggestion ? <p className="message-suggestion">{message.suggestion}</p> : null}
+                </article>
+              ))}
+            </div>
           </div>
         </div>
       ) : null}

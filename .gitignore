@@ -19,3 +19,4 @@ coverage/
 __pycache__/
 *.pyc
 *.tsbuildinfo
+.codex-tmp/

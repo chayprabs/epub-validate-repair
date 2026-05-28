@@ -97,7 +97,8 @@ a {
 .upload-row,
 .result-grid,
 .artifact-links,
-.message-topline {
+.message-topline,
+.recipe-strip {
   display: flex;
   gap: 16px;
 }
@@ -112,6 +113,20 @@ a {
 .upload-row {
   margin: 20px 0 12px;
   flex-wrap: wrap;
+}
+
+.recipe-strip {
+  flex-wrap: wrap;
+  margin: 0 0 18px;
+}
+
+.recipe-pill {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 12px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.92rem;
 }
 
 .file-input {
@@ -136,6 +151,11 @@ a {
 .action:disabled {
   opacity: 0.72;
   cursor: progress;
+}
+
+.secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
 }
 
 .status-line,
@@ -167,6 +187,52 @@ a {
   flex: 1 1 420px;
   display: grid;
   gap: 12px;
+}
+
+.result-main {
+  flex: 1 1 520px;
+  display: grid;
+  gap: 18px;
+}
+
+.repair-panel {
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 16px;
+  background: rgba(5, 10, 16, 0.45);
+}
+
+.repair-panel h3 {
+  margin: 0;
+}
+
+.repair-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.repair-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 12px;
+}
+
+.repair-item input {
+  margin-top: 2px;
+}
+
+.repair-item span {
+  display: grid;
+  gap: 4px;
+}
+
+.repair-item.suggested {
+  border-color: rgba(241, 178, 74, 0.3);
+  background: rgba(241, 178, 74, 0.06);
 }
 
 .message-card {
