@@ -44,13 +44,14 @@ BOOKS = {
     <dc:identifier id="bookid">9781234567890</dc:identifier>
     <dc:publisher>EpubDoctor Fixtures</dc:publisher>
     <dc:rights>CC-BY</dc:rights>
+    <meta property="dcterms:modified">2026-01-01T00:00:00Z</meta>
   </metadata>
   <manifest>
-    <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" />
+    <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav" />
     <item id="chapter-1" href="text/chapter1.xhtml" media-type="application/xhtml+xml" />
-    <item id="cover-image" href="images/cover.jpg" media-type="image/jpeg" />
+    <item id="cover-image" href="images/cover.jpg" media-type="image/jpeg" properties="cover-image" />
   </manifest>
-  <spine toc="nav">
+  <spine>
     <itemref idref="chapter-1" />
   </spine>
 </package>
