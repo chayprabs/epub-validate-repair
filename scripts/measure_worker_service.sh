@@ -5,7 +5,8 @@ container_name="${1:-epubdoctor-worker-perf}"
 host_port="${2:-18001}"
 iterations="${3:-5}"
 worker_url="http://127.0.0.1:${host_port}"
-fixture_path="tests/fixtures/kdp-ready.epub"
+validation_fixture_path="tests/fixtures/performance-5mb.epub"
+conversion_fixture_path="tests/fixtures/kdp-ready.epub"
 
 cleanup() {
   docker rm -f "${container_name}" >/dev/null 2>&1 || true
@@ -42,10 +43,12 @@ mobi_to_epub_samples=()
 
 for ((i = 1; i <= iterations; i += 1)); do
   start_ms=$(now_ms)
-  validate_json=$(curl -fsS -F "file=@${fixture_path};type=application/epub+zip" "${worker_url}/v1/validate")
+  curl -fsS -F "file=@${validation_fixture_path};type=application/epub+zip" "${worker_url}/v1/validate" >/tmp/epubdoctor-validate.json
   end_ms=$(now_ms)
   validate_samples+=($((end_ms - start_ms)))
-  validation_job_id=$(jq -r '.jobId' <<<"${validate_json}")
+
+  conversion_validate_json=$(curl -fsS -F "file=@${conversion_fixture_path};type=application/epub+zip" "${worker_url}/v1/validate")
+  validation_job_id=$(jq -r '.jobId' <<<"${conversion_validate_json}")
 
   start_ms=$(now_ms)
   mobi_json=$(curl -fsS -H "Content-Type: application/json" -d "{\"jobId\":\"${validation_job_id}\",\"target\":\"mobi\",\"options\":{}}" "${worker_url}/v1/convert")

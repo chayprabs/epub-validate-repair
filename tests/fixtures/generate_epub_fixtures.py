@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from io import BytesIO
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZIP_STORED, ZipFile, ZipInfo
@@ -18,7 +19,21 @@ def build_valid_cover_jpeg() -> bytes:
     return buffer.getvalue()
 
 
+def build_payload_bytes(size_bytes: int) -> bytes:
+    chunks: list[bytes] = []
+    counter = 0
+    total_size = 0
+    while total_size < size_bytes:
+        seed = f"epubdoctor-performance-{counter}".encode("utf-8")
+        chunk = hashlib.sha256(seed).digest()
+        chunks.append(chunk)
+        total_size += len(chunk)
+        counter += 1
+    return b"".join(chunks)[:size_bytes]
+
+
 VALID_COVER_JPEG = build_valid_cover_jpeg()
+PERFORMANCE_IMAGE_BYTES = build_payload_bytes(5 * 1024 * 1024)
 BOOKS = {
     "broken-manifest.epub": {
         "opf": """<?xml version="1.0" encoding="utf-8"?>
@@ -287,6 +302,39 @@ BOOKS = {
 <html xmlns="http://www.w3.org/1999/xhtml"><head><title>Chapter 1</title></head><body><h1>Legacy Chapter</h1></body></html>
 """,
             "EPUB/images/cover.jpg": VALID_COVER_JPEG,
+        },
+    },
+    "performance-5mb.epub": {
+        "opf": """<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="bookid">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:title>Performance Fixture</dc:title>
+    <dc:creator>Fixture Author</dc:creator>
+    <dc:language>en</dc:language>
+    <dc:identifier id="bookid">9781234567890</dc:identifier>
+    <dc:publisher>EpubDoctor Fixtures</dc:publisher>
+    <meta property="dcterms:modified">2026-01-01T00:00:00Z</meta>
+  </metadata>
+  <manifest>
+    <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav" />
+    <item id="chapter-1" href="text/chapter1.xhtml" media-type="application/xhtml+xml" />
+    <item id="cover-image" href="images/cover.jpg" media-type="image/jpeg" properties="cover-image" />
+    <item id="perf-image" href="images/perf-payload.jpg" media-type="image/jpeg" />
+  </manifest>
+  <spine>
+    <itemref idref="chapter-1" />
+  </spine>
+</package>
+""",
+        "files": {
+            "EPUB/nav.xhtml": """<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title>Navigation</title></head><body><nav epub:type="toc" xmlns:epub="http://www.idpf.org/2007/ops"><ol><li><a href="text/chapter1.xhtml">Chapter 1</a></li></ol></nav></body></html>
+""",
+            "EPUB/text/chapter1.xhtml": """<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title>Chapter 1</title></head><body><h1>Chapter 1</h1><p>This fixture is intentionally large enough for validation timing checks.</p></body></html>
+""",
+            "EPUB/images/cover.jpg": VALID_COVER_JPEG,
+            "EPUB/images/perf-payload.jpg": PERFORMANCE_IMAGE_BYTES,
         },
     },
 }

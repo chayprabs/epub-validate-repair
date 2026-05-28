@@ -55,6 +55,8 @@ def main() -> None:
     parser.add_argument("--worker-url", default="http://127.0.0.1:8000")
     parser.add_argument("--iterations", type=int, default=5)
     parser.add_argument("--timeout", type=float, default=120.0)
+    parser.add_argument("--validation-fixture", default="performance-5mb.epub")
+    parser.add_argument("--conversion-fixture", default="kdp-ready.epub")
     args = parser.parse_args()
 
     validation_samples: list[float] = []
@@ -63,10 +65,12 @@ def main() -> None:
 
     with httpx.Client(timeout=args.timeout) as client:
         for _ in range(args.iterations):
-            validate_elapsed, validation = upload_validate(client, args.worker_url, "kdp-ready.epub")
+            validate_elapsed, _ = upload_validate(client, args.worker_url, args.validation_fixture)
             validation_samples.append(validate_elapsed)
 
-            convert_elapsed, mobi = convert_job(client, args.worker_url, validation["jobId"], "mobi")
+            _, conversion_validation = upload_validate(client, args.worker_url, args.conversion_fixture)
+
+            convert_elapsed, mobi = convert_job(client, args.worker_url, conversion_validation["jobId"], "mobi")
             epub_to_mobi_samples.append(convert_elapsed)
 
             roundtrip_elapsed, _ = convert_job(client, args.worker_url, mobi["jobId"], "epub")
